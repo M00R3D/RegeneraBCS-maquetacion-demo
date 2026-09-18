@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Regenera BCS</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- TOPBAR -->
+
+    <header class="topbar">
+
+        <a href="#" class="logo">
+            Regenera<span>BCS</span>
+        </a>
+
+        <nav class="nav">
+            <a href="#inicio">Inicio</a>
+            <a href="#naturaleza">Flora y fauna</a>
+            <a href="#actividades">Actividades</a>
+            <a href="#articulos">Artículos</a>
+            <a href="#reporte">Reportar</a>
+        </nav>
+
+        <button class="menu-btn" id="menuBtn">
+            ☰
+        </button>
+
+    </header>
+
+
+    <!-- MOBILE MENU -->
+
+    <div class="mobile-menu" id="mobileMenu">
+
+        <a href="#inicio">Inicio</a>
+        <a href="#naturaleza">Flora y fauna</a>
+        <a href="#actividades">Actividades</a>
+        <a href="#articulos">Artículos</a>
+        <a href="#reporte">Reporte ciudadano</a>
+
+    </div>
+
+
+    <main>
+
+        <!-- HERO -->
+
+        <section class="hero" id="inicio">
+
+            <div class="hero-content">
+
+                <span class="eyebrow">
+                    BAJA CALIFORNIA SUR
+                </span>
+
+                <h1>
+                    Conoce.
+                    <br>
+                    Explora.
+                    <br>
+                    <em>Regenera.</em>
+                </h1>
+
+                <p>
+                    Descubre la naturaleza, actividades e iniciativas
+                    que hacen de Baja California Sur un lugar que vale la pena cuidar.
+                </p>
+
+                <a href="#naturaleza" class="hero-btn">
+                    Explorar →
+                </a>
+
+            </div>
+
+            <div class="hero-decoration">
+                <span>BCS</span>
+            </div>
+
+        </section>
+
+
+        <!-- INTRO -->
+
+        <section class="intro">
+
+            <span class="eyebrow">
+                REGÉNERA TU FORMA DE VIAJAR
+            </span>
+
+            <h2>
+                Turismo que no solo visita,
+                <br>
+                también <span>aporta.</span>
+            </h2>
+
+            <p>
+                Información para conocer nuestros ecosistemas,
+                descubrir nuevas actividades y apoyar iniciativas
+                que buscan conservar Baja California Sur.
+            </p>
+
+        </section>
+
+
+        <!-- FLORA Y FAUNA -->
+
+        <section class="content-section" id="naturaleza">
+
+            <div class="section-header">
+
+                <div>
+                    <span class="eyebrow">CONOCE NUESTRO ENTORNO</span>
+
+                    <h2>
+                        Flora y <span>fauna</span>
+                    </h2>
+                </div>
+
+                <div class="carousel-controls">
+
+                    <button class="carousel-btn" id="naturePrev">
+                        ←
+                    </button>
+
+                    <button class="carousel-btn" id="natureNext">
+                        →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="carousel">
+
+                <div class="carousel-track" id="natureTrack">
+
+                    <!-- JS INSERTA LAS TARJETAS -->
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ACTIVIDADES -->
+
+        <section class="content-section activities-section" id="actividades">
+
+            <div class="section-header">
+
+                <div>
+                    <span class="eyebrow">EXPERIENCIAS</span>
+
+                    <h2>
+                        Actividades <span>responsables</span>
+                    </h2>
+                </div>
+
+                <div class="carousel-controls">
+
+                    <button class="carousel-btn" id="activityPrev">
+                        ←
+                    </button>
+
+                    <button class="carousel-btn" id="activityNext">
+                        →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="carousel">
+
+                <div class="carousel-track" id="activityTrack">
+
+                    <!-- JS INSERTA LAS TARJETAS -->
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ARTICULOS -->
+
+        <section class="articles-section" id="articulos">
+
+            <div class="section-header">
+
+                <div>
+                    <span class="eyebrow">COMUNIDAD</span>
+
+                    <h2>
+                        Historias que <span>regeneran.</span>
+                    </h2>
+                </div>
+
+                <a href="#" class="view-all">
+                    Ver todos →
+                </a>
+
+            </div>
+
+
+            <div class="articles-grid" id="articlesGrid">
+
+                <!-- JS INSERTA ARTICULOS -->
+
+            </div>
+
+        </section>
+
+
+        <!-- REPORTE -->
+
+        <section class="report-section" id="reporte">
+
+            <div>
+
+                <span class="eyebrow">
+                    PARTICIPA
+                </span>
+
+                <h2>
+                    ¿Viste algo que
+                    <span>debería cambiar?</span>
+                </h2>
+
+                <p>
+                    Reporta un problema ambiental que hayas encontrado
+                    y ayuda a mantener informada a la comunidad.
+                </p>
+
+            </div>
+
+            <button class="report-btn">
+                Crear reporte →
+            </button>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        <div class="logo">
+            Regenera<span>BCS</span>
+        </div>
+
+        <p>
+            Turismo responsable · Baja California Sur
+        </p>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>
