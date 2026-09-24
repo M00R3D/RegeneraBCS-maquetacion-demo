@@ -7,219 +7,297 @@
     <title>Regenera BCS</title>
 
     <link rel="stylesheet" href="style.css">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
     <!-- TOPBAR -->
-
     <header class="topbar">
 
         <a href="#" class="logo">
-            Regenera<span>BCS</span>
+            <span class="logo-mark">R</span>
+            <span>Regenera<span>BCS</span></span>
         </a>
 
         <nav class="nav">
             <a href="#inicio">Inicio</a>
-            <a href="#naturaleza">Flora y fauna</a>
+            <a href="#flora">Flora y fauna</a>
             <a href="#actividades">Actividades</a>
             <a href="#articulos">Artículos</a>
             <a href="#reporte">Reportar</a>
         </nav>
 
-        <button class="menu-btn" id="menuBtn">
+        <button class="menu-button" id="menuButton">
             ☰
         </button>
 
     </header>
 
 
-    <!-- MOBILE MENU -->
-
-    <div class="mobile-menu" id="mobileMenu">
-
+    <!-- MENU MOBILE -->
+    <nav class="mobile-menu" id="mobileMenu">
         <a href="#inicio">Inicio</a>
-        <a href="#naturaleza">Flora y fauna</a>
+        <a href="#flora">Flora y fauna</a>
         <a href="#actividades">Actividades</a>
         <a href="#articulos">Artículos</a>
-        <a href="#reporte">Reporte ciudadano</a>
+        <a href="#reporte">Reportar</a>
+    </nav>
 
-    </div>
 
+    <!-- HERO -->
+    <main id="inicio">
 
-    <main>
+        <section class="hero">
 
-        <!-- HERO -->
-
-        <section class="hero" id="inicio">
-
+            <!-- TEXTO CENTRAL -->
             <div class="hero-content">
 
-                <span class="eyebrow">
+                <p class="hero-small">
                     BAJA CALIFORNIA SUR
-                </span>
+                </p>
 
                 <h1>
                     Conoce.
-                    <br>
-                    Explora.
-                    <br>
-                    <em>Regenera.</em>
+                    <span>Explora.</span>
+                    Regenera.
                 </h1>
 
-                <p>
-                    Descubre la naturaleza, actividades e iniciativas
-                    que hacen de Baja California Sur un lugar que vale la pena cuidar.
+                <p class="hero-description">
+                    Descubre la naturaleza, las actividades y las iniciativas
+                    que buscan cuidar y regenerar nuestro entorno.
                 </p>
-
-                <a href="#naturaleza" class="hero-btn">
-                    Explorar →
-                </a>
 
             </div>
 
-            <div class="hero-decoration">
-                <span>BCS</span>
+
+            <!-- FLORA Y FAUNA -->
+            <div class="hero-panel" id="floraPanel">
+
+                <div class="panel-background"></div>
+
+                <div class="panel-overlay"></div>
+
+                <div class="panel-content">
+
+                    <span class="panel-category">
+                        Flora y fauna
+                    </span>
+
+                    <h2 id="floraTitle">
+                        Especies de Baja California Sur
+                    </h2>
+
+                    <p id="floraDescription">
+                        Conoce las especies y ecosistemas que forman parte
+                        de nuestro entorno.
+                    </p>
+
+                    <a href="#flora" class="panel-button">
+                        Explorar
+                        <span>→</span>
+                    </a>
+
+                </div>
+
+                <div class="panel-controls">
+
+                    <button id="floraPrev">
+                        ←
+                    </button>
+
+                    <div class="panel-counter">
+                        <span id="floraCurrent">01</span>
+                        /
+                        <span id="floraTotal">04</span>
+                    </div>
+
+                    <button id="floraNext">
+                        →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIVIDADES -->
+            <div class="hero-panel" id="activityPanel">
+
+                <div class="panel-background"></div>
+
+                <div class="panel-overlay"></div>
+
+                <div class="panel-content">
+
+                    <span class="panel-category">
+                        Actividades responsables
+                    </span>
+
+                    <h2 id="activityTitle">
+                        Explora de forma responsable
+                    </h2>
+
+                    <p id="activityDescription">
+                        Descubre actividades que permiten disfrutar
+                        Baja California Sur cuidando su entorno.
+                    </p>
+
+                    <a href="#actividades" class="panel-button">
+                        Descubrir
+                        <span>→</span>
+                    </a>
+
+                </div>
+
+                <div class="panel-controls">
+
+                    <button id="activityPrev">
+                        ←
+                    </button>
+
+                    <div class="panel-counter">
+                        <span id="activityCurrent">01</span>
+                        /
+                        <span id="activityTotal">04</span>
+                    </div>
+
+                    <button id="activityNext">
+                        →
+                    </button>
+
+                </div>
+
             </div>
 
         </section>
 
 
         <!-- INTRO -->
-
         <section class="intro">
 
-            <span class="eyebrow">
-                REGÉNERA TU FORMA DE VIAJAR
-            </span>
+            <div class="section-label">
+                REGNERA BCS
+            </div>
 
             <h2>
-                Turismo que no solo visita,
+                Turismo que conoce,
                 <br>
-                también <span>aporta.</span>
+                disfruta y cuida.
             </h2>
 
             <p>
-                Información para conocer nuestros ecosistemas,
-                descubrir nuevas actividades y apoyar iniciativas
-                que buscan conservar Baja California Sur.
+                Una plataforma para descubrir la riqueza natural de Baja California Sur, conocer sus especies, ecosistemas y paisajes, y encontrar nuevas formas de recorrerlos de manera responsable. Explora actividades, descubre lugares y conoce iniciativas que buscan conservar nuestro entorno y fortalecer a las comunidades locales. Porque disfrutar de Baja California Sur también significa aprender a cuidarlo y contribuir a que siga siendo un lugar vivo para las próximas generaciones.
             </p>
 
         </section>
 
 
-        <!-- FLORA Y FAUNA -->
-
-        <section class="content-section" id="naturaleza">
-
-            <div class="section-header">
-
-                <div>
-                    <span class="eyebrow">CONOCE NUESTRO ENTORNO</span>
-
-                    <h2>
-                        Flora y <span>fauna</span>
-                    </h2>
-                </div>
-
-                <div class="carousel-controls">
-
-                    <button class="carousel-btn" id="naturePrev">
-                        ←
-                    </button>
-
-                    <button class="carousel-btn" id="natureNext">
-                        →
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <div class="carousel">
-
-                <div class="carousel-track" id="natureTrack">
-
-                    <!-- JS INSERTA LAS TARJETAS -->
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ACTIVIDADES -->
-
-        <section class="content-section activities-section" id="actividades">
-
-            <div class="section-header">
-
-                <div>
-                    <span class="eyebrow">EXPERIENCIAS</span>
-
-                    <h2>
-                        Actividades <span>responsables</span>
-                    </h2>
-                </div>
-
-                <div class="carousel-controls">
-
-                    <button class="carousel-btn" id="activityPrev">
-                        ←
-                    </button>
-
-                    <button class="carousel-btn" id="activityNext">
-                        →
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <div class="carousel">
-
-                <div class="carousel-track" id="activityTrack">
-
-                    <!-- JS INSERTA LAS TARJETAS -->
-
-                </div>
-
-            </div>
-
-        </section>
-
-
+       
         <!-- ARTICULOS -->
-
         <section class="articles-section" id="articulos">
 
-            <div class="section-header">
+            <div class="section-heading">
 
                 <div>
-                    <span class="eyebrow">COMUNIDAD</span>
+                    <span>03 / COMUNIDAD</span>
 
                     <h2>
-                        Historias que <span>regeneran.</span>
+                        Artículos
                     </h2>
                 </div>
 
-                <a href="#" class="view-all">
-                    Ver todos →
-                </a>
+                <p>
+                    Noticias, iniciativas y proyectos relacionados
+                    con el turismo responsable en BCS.
+                </p>
 
             </div>
 
 
-            <div class="articles-grid" id="articlesGrid">
+            <div class="articles-grid">
 
-                <!-- JS INSERTA ARTICULOS -->
+                <article class="article-card">
+
+                    <div class="article-image image-one"></div>
+
+                    <div class="article-content">
+
+                        <span>
+                            COMUNIDAD
+                        </span>
+
+                        <h3>
+                            Nuevas iniciativas para cuidar nuestras costas
+                        </h3>
+
+                        <p>
+                            Conoce proyectos locales que buscan generar
+                            un impacto positivo.
+                        </p>
+
+                        <a href="#">
+                            Leer artículo →
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+                <article class="article-card">
+
+                    <div class="article-image image-two"></div>
+
+                    <div class="article-content">
+
+                        <span>
+                            NATURALEZA
+                        </span>
+
+                        <h3>
+                            Protegiendo los ecosistemas de BCS
+                        </h3>
+
+                        <p>
+                            Información y recomendaciones para visitar
+                            nuestros espacios naturales.
+                        </p>
+
+                        <a href="#">
+                            Leer artículo →
+                        </a>
+
+                    </div>
+
+                </article>
+
+
+                <article class="article-card">
+
+                    <div class="article-image image-three"></div>
+
+                    <div class="article-content">
+
+                        <span>
+                            TURISMO
+                        </span>
+
+                        <h3>
+                            ¿Qué significa viajar responsablemente?
+                        </h3>
+
+                        <p>
+                            Algunas prácticas sencillas para reducir
+                            nuestro impacto.
+                        </p>
+
+                        <a href="#">
+                            Leer artículo →
+                        </a>
+
+                    </div>
+
+                </article>
 
             </div>
 
@@ -227,30 +305,30 @@
 
 
         <!-- REPORTE -->
-
         <section class="report-section" id="reporte">
 
             <div>
 
-                <span class="eyebrow">
+                <span>
                     PARTICIPA
                 </span>
 
                 <h2>
                     ¿Viste algo que
-                    <span>debería cambiar?</span>
+                    debería conocerse?
                 </h2>
 
                 <p>
-                    Reporta un problema ambiental que hayas encontrado
+                    Comparte un problema ambiental que hayas observado
                     y ayuda a mantener informada a la comunidad.
                 </p>
 
             </div>
 
-            <button class="report-btn">
-                Crear reporte →
-            </button>
+            <a href="#" class="report-button">
+                Crear reporte
+                <span>→</span>
+            </a>
 
         </section>
 
@@ -258,10 +336,9 @@
 
 
     <!-- FOOTER -->
-
     <footer>
 
-        <div class="logo">
+        <div class="footer-logo">
             Regenera<span>BCS</span>
         </div>
 

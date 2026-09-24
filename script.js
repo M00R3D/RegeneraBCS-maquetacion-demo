@@ -1,35 +1,31 @@
-/* =========================
-   DATOS TEMPORALES
-========================= */
+/* =====================================================
+   DATOS DEL HERO
+===================================================== */
 
-const natureData = [
+const floraData = [
 
     {
-        title: "Tiburón ballena",
-        category: "FAUNA MARINA",
-        description: "Conoce esta especie y las recomendaciones para observarla responsablemente.",
-        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=900&q=80"
+        title: "Ballena gris",
+        description: "Conoce una de las especies marinas más representativas de Baja California Sur.",
+        image: "https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=1800&q=85"
     },
 
     {
-        title: "Tortugas marinas",
-        category: "FAUNA MARINA",
-        description: "Conoce su importancia para los ecosistemas y cómo protegerlas.",
-        image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=80"
+        title: "Vida marina",
+        description: "Descubre la diversidad de especies que habitan nuestros mares.",
+        image: "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1800&q=85"
     },
 
     {
-        title: "Lobos marinos",
-        category: "FAUNA MARINA",
-        description: "Descubre dónde pueden observarse y cómo mantener una distancia responsable.",
-        image: "https://images.unsplash.com/photo-1551244072-5d12893278ab?auto=format&fit=crop&w=900&q=80"
+        title: "Ecosistemas costeros",
+        description: "Explora los ecosistemas que conectan el desierto con el océano.",
+        image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85"
     },
 
     {
-        title: "Arrecifes rocosos",
-        category: "ECOSISTEMA",
-        description: "Un ecosistema fundamental para numerosas especies marinas.",
-        image: "https://images.unsplash.com/photo-1546026423-cc4642628d2b?auto=format&fit=crop&w=900&q=80"
+        title: "Desierto sudcaliforniano",
+        description: "Conoce la flora y fauna que se ha adaptado a uno de los ambientes más particulares de México.",
+        image: "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1800&q=85"
     }
 
 ];
@@ -38,330 +34,349 @@ const natureData = [
 const activityData = [
 
     {
-        title: "Kayak",
-        category: "ACTIVIDAD",
-        description: "Explora zonas costeras procurando reducir tu impacto.",
-        image: "https://images.unsplash.com/photo-1502680390469-be75c86b636f?auto=format&fit=crop&w=900&q=80"
-    },
-
-    {
         title: "Senderismo",
-        category: "ACTIVIDAD",
-        description: "Conoce los paisajes naturales siguiendo caminos y reglas establecidas.",
-        image: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=900&q=80"
+        description: "Recorre paisajes naturales procurando reducir tu impacto en el entorno.",
+        image: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1800&q=85"
     },
 
     {
-        title: "Snorkel",
-        category: "ACTIVIDAD",
-        description: "Observa la vida marina sin tocar ni alterar el ecosistema.",
-        image: "https://images.unsplash.com/photo-1544551763-77ef2d0cfc6c?auto=format&fit=crop&w=900&q=80"
+        title: "Kayak",
+        description: "Explora las costas de Baja California Sur desde el agua.",
+        image: "https://images.unsplash.com/photo-1600519009961-b4d3f3a4c1a9?auto=format&fit=crop&w=1800&q=85"
+    },
+
+    {
+        title: "Observación de fauna",
+        description: "Disfruta de la vida silvestre respetando las distancias y los espacios naturales.",
+        image: "https://images.unsplash.com/photo-1549366021-9f761d450615?auto=format&fit=crop&w=1800&q=85"
     },
 
     {
         title: "Ciclismo",
-        category: "MOVILIDAD",
-        description: "Una alternativa para recorrer determinados espacios sin utilizar automóvil.",
-        image: "https://images.unsplash.com/photo-1502744688674-c619d1586c9e?auto=format&fit=crop&w=900&q=80"
+        description: "Conoce nuevos lugares utilizando formas de movilidad de bajo impacto.",
+        image: "https://images.unsplash.com/photo-1541625602330-2277a4c46182?auto=format&fit=crop&w=1800&q=85"
     }
 
 ];
 
 
-const articlesData = [
+/* =====================================================
+   ELEMENTOS
+===================================================== */
 
-    {
-        category: "INICIATIVAS LOCALES",
-        title: "Una comunidad que busca proteger su costa",
-        description: "Conoce proyectos locales relacionados con la conservación y el turismo responsable.",
-        image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=900&q=80"
-    },
+const floraPanel = document.querySelector("#floraPanel");
+const activityPanel = document.querySelector("#activityPanel");
 
-    {
-        category: "TURISMO RESPONSABLE",
-        title: "Cómo visitar una playa sin dejar huella",
-        description: "Pequeñas decisiones pueden reducir considerablemente nuestro impacto.",
-        image: "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=900&q=80"
-    },
 
-    {
-        category: "COMUNIDAD",
-        title: "Nuevas formas de conocer Baja California Sur",
-        description: "Personas y proyectos que están buscando transformar la manera de hacer turismo.",
-        image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80"
+const floraBackground =
+    floraPanel.querySelector(".panel-background");
+
+const activityBackground =
+    activityPanel.querySelector(".panel-background");
+
+
+const floraTitle =
+    document.querySelector("#floraTitle");
+
+const floraDescription =
+    document.querySelector("#floraDescription");
+
+
+const activityTitle =
+    document.querySelector("#activityTitle");
+
+const activityDescription =
+    document.querySelector("#activityDescription");
+
+
+const floraCurrent =
+    document.querySelector("#floraCurrent");
+
+const activityCurrent =
+    document.querySelector("#activityCurrent");
+
+
+document.querySelector("#floraTotal").textContent =
+    String(floraData.length).padStart(2, "0");
+
+
+document.querySelector("#activityTotal").textContent =
+    String(activityData.length).padStart(2, "0");
+
+
+/* =====================================================
+   ESTADO
+===================================================== */
+
+let floraIndex = 0;
+let activityIndex = 0;
+
+
+/* =====================================================
+   ANIMACIÓN DEL CAMBIO
+===================================================== */
+
+function changePanel(
+    panel,
+    background,
+    titleElement,
+    descriptionElement,
+    counterElement,
+    data,
+    index
+) {
+
+    panel.classList.add("changing");
+
+
+    setTimeout(() => {
+
+        background.style.opacity = "0";
+
+        setTimeout(() => {
+
+            background.style.backgroundImage =
+                `url("${data[index].image}")`;
+
+            titleElement.textContent =
+                data[index].title;
+
+            descriptionElement.textContent =
+                data[index].description;
+
+            counterElement.textContent =
+                String(index + 1).padStart(2, "0");
+
+            background.style.opacity = "1";
+
+            panel.classList.remove("changing");
+
+        }, 350);
+
+    }, 50);
+
+}
+
+
+/* =====================================================
+   FLORA
+===================================================== */
+
+function nextFlora() {
+
+    floraIndex++;
+
+    if (floraIndex >= floraData.length) {
+        floraIndex = 0;
     }
 
-];
+    changePanel(
+        floraPanel,
+        floraBackground,
+        floraTitle,
+        floraDescription,
+        floraCurrent,
+        floraData,
+        floraIndex
+    );
+}
 
 
-/* =========================
-   CREAR TARJETAS
-========================= */
+function previousFlora() {
 
-function createCards(data, container) {
+    floraIndex--;
 
-    data.forEach(item => {
+    if (floraIndex < 0) {
+        floraIndex = floraData.length - 1;
+    }
 
-        const card = document.createElement("article");
+    changePanel(
+        floraPanel,
+        floraBackground,
+        floraTitle,
+        floraDescription,
+        floraCurrent,
+        floraData,
+        floraIndex
+    );
+}
 
-        card.className = "card reveal";
 
-        card.innerHTML = `
+/* =====================================================
+   ACTIVIDADES
+===================================================== */
 
-            <img
-                class="card-image"
-                src="${item.image}"
-                alt="${item.title}"
-            >
+function nextActivity() {
 
-            <div class="card-overlay">
+    activityIndex++;
 
-                <span class="card-category">
-                    ${item.category}
-                </span>
+    if (activityIndex >= activityData.length) {
+        activityIndex = 0;
+    }
 
-                <h3 class="card-title">
-                    ${item.title}
-                </h3>
+    changePanel(
+        activityPanel,
+        activityBackground,
+        activityTitle,
+        activityDescription,
+        activityCurrent,
+        activityData,
+        activityIndex
+    );
+}
 
-                <p class="card-description">
-                    ${item.description}
-                </p>
 
-            </div>
+function previousActivity() {
 
-        `;
+    activityIndex--;
 
-        container.appendChild(card);
+    if (activityIndex < 0) {
+        activityIndex = activityData.length - 1;
+    }
+
+    changePanel(
+        activityPanel,
+        activityBackground,
+        activityTitle,
+        activityDescription,
+        activityCurrent,
+        activityData,
+        activityIndex
+    );
+}
+
+
+/* =====================================================
+   BOTONES
+===================================================== */
+
+document
+    .querySelector("#floraNext")
+    .addEventListener("click", (event) => {
+
+        event.stopPropagation();
+
+        nextFlora();
 
     });
+
+
+document
+    .querySelector("#floraPrev")
+    .addEventListener("click", (event) => {
+
+        event.stopPropagation();
+
+        previousFlora();
+
+    });
+
+
+document
+    .querySelector("#activityNext")
+    .addEventListener("click", (event) => {
+
+        event.stopPropagation();
+
+        nextActivity();
+
+    });
+
+
+document
+    .querySelector("#activityPrev")
+    .addEventListener("click", (event) => {
+
+        event.stopPropagation();
+
+        previousActivity();
+
+    });
+
+
+/* =====================================================
+   INICIALIZAR
+===================================================== */
+
+function initializePanels() {
+
+    floraBackground.style.backgroundImage =
+        `url("${floraData[0].image}")`;
+
+    activityBackground.style.backgroundImage =
+        `url("${activityData[0].image}")`;
 
 }
 
 
-/* =========================
-   CREAR ARTICULOS
-========================= */
-
-function createArticles() {
-
-    const container =
-        document.getElementById("articlesGrid");
-
-    articlesData.forEach(item => {
-
-        const article =
-            document.createElement("article");
-
-        article.className = "article reveal";
-
-        article.innerHTML = `
-
-            <img
-                class="article-image"
-                src="${item.image}"
-                alt="${item.title}"
-            >
-
-            <span class="article-category">
-                ${item.category}
-            </span>
-
-            <h3>
-                ${item.title}
-            </h3>
-
-            <p>
-                ${item.description}
-            </p>
-
-        `;
-
-        container.appendChild(article);
-
-    });
-
-}
+initializePanels();
 
 
-/* =========================
-   CAROUSEL
-========================= */
+/* =====================================================
+   CAMBIO AUTOMÁTICO
+===================================================== */
 
-function setupCarousel(trackId, prevId, nextId) {
+let floraTimer = setInterval(nextFlora, 6000);
 
-    const track =
-        document.getElementById(trackId);
-
-    const prev =
-        document.getElementById(prevId);
-
-    const next =
-        document.getElementById(nextId);
-
-    let position = 0;
-
-    const getStep = () => {
-
-        const card =
-            track.querySelector(".card");
-
-        if (!card) return 340;
-
-        return card.offsetWidth + 22;
-
-    };
+let activityTimer = setInterval(nextActivity, 7000);
 
 
-    next.addEventListener("click", () => {
+/* =====================================================
+   PAUSAR AL PASAR EL MOUSE
+===================================================== */
 
-        const max =
-            track.scrollWidth -
-            track.parentElement.offsetWidth;
+floraPanel.addEventListener("mouseenter", () => {
 
-        position += getStep();
+    clearInterval(floraTimer);
 
-        if (position > max) {
-            position = 0;
-        }
-
-        track.style.transform =
-            `translateX(-${position}px)`;
-
-    });
+});
 
 
-    prev.addEventListener("click", () => {
+floraPanel.addEventListener("mouseleave", () => {
 
-        position -= getStep();
+    floraTimer = setInterval(nextFlora, 6000);
 
-        if (position < 0) {
-
-            const max =
-                track.scrollWidth -
-                track.parentElement.offsetWidth;
-
-            position = Math.max(0, max);
-
-        }
-
-        track.style.transform =
-            `translateX(-${position}px)`;
-
-    });
-
-}
+});
 
 
-/* =========================
-   MENU MOVIL
-========================= */
+activityPanel.addEventListener("mouseenter", () => {
 
-const menuBtn =
-    document.getElementById("menuBtn");
+    clearInterval(activityTimer);
+
+});
+
+
+activityPanel.addEventListener("mouseleave", () => {
+
+    activityTimer = setInterval(nextActivity, 7000);
+
+});
+
+
+/* =====================================================
+   MENÚ MOBILE
+===================================================== */
+
+const menuButton =
+    document.querySelector("#menuButton");
 
 const mobileMenu =
-    document.getElementById("mobileMenu");
+    document.querySelector("#mobileMenu");
 
-menuBtn.addEventListener("click", () => {
+
+menuButton.addEventListener("click", () => {
 
     mobileMenu.classList.toggle("active");
 
 });
 
 
-document.querySelectorAll(".mobile-menu a")
-    .forEach(link => {
+mobileMenu.querySelectorAll("a").forEach(link => {
 
-        link.addEventListener("click", () => {
+    link.addEventListener("click", () => {
 
-            mobileMenu.classList.remove("active");
-
-        });
+        mobileMenu.classList.remove("active");
 
     });
 
-
-/* =========================
-   SCROLL REVEAL
-========================= */
-
-function setupReveal() {
-
-    const elements =
-        document.querySelectorAll(".reveal");
-
-    const observer =
-        new IntersectionObserver(
-
-            entries => {
-
-                entries.forEach(entry => {
-
-                    if (entry.isIntersecting) {
-
-                        entry.target.classList.add("visible");
-
-                        observer.unobserve(
-                            entry.target
-                        );
-
-                    }
-
-                });
-
-            },
-
-            {
-                threshold: .15
-            }
-
-        );
-
-
-    elements.forEach(element => {
-
-        observer.observe(element);
-
-    });
-
-}
-
-
-/* =========================
-   INICIALIZAR
-========================= */
-
-const natureTrack =
-    document.getElementById("natureTrack");
-
-const activityTrack =
-    document.getElementById("activityTrack");
-
-
-createCards(
-    natureData,
-    natureTrack
-);
-
-createCards(
-    activityData,
-    activityTrack
-);
-
-createArticles();
-
-
-setupCarousel(
-    "natureTrack",
-    "naturePrev",
-    "natureNext"
-);
-
-setupCarousel(
-    "activityTrack",
-    "activityPrev",
-    "activityNext"
-);
-
-setupReveal();
+});
