@@ -380,3 +380,464 @@ mobileMenu.querySelectorAll("a").forEach(link => {
     });
 
 });
+/* =====================================================
+   SPLASH SCREEN
+===================================================== */
+
+const splashScreen =
+    document.querySelector("#splashScreen");
+
+const splashCanvas =
+    document.querySelector("#splashCanvas");
+
+const splashLogo =
+    document.querySelector(".splash-logo img");
+
+const splashContext =
+    splashCanvas.getContext("2d");
+
+let splashParticles = [];
+
+let splashAnimationFrame;
+
+let splashStartTime;
+
+const splashDuration = 4200;
+
+
+/* =====================================================
+   CONFIGURACIÓN
+===================================================== */
+
+function resizeSplashCanvas() {
+
+    const ratio = window.devicePixelRatio || 1;
+
+    splashCanvas.width =
+        window.innerWidth * ratio;
+
+    splashCanvas.height =
+        window.innerHeight * ratio;
+
+    splashCanvas.style.width =
+        window.innerWidth + "px";
+
+    splashCanvas.style.height =
+        window.innerHeight + "px";
+
+    splashContext.setTransform(
+        ratio,
+        0,
+        0,
+        ratio,
+        0,
+        0
+    );
+}
+
+resizeSplashCanvas();
+
+window.addEventListener(
+    "resize",
+    resizeSplashCanvas
+);
+
+
+/* =====================================================
+   CREAR PARTÍCULAS DESDE EL PNG
+===================================================== */
+
+function createSplashParticles() {
+
+    const image = new Image();
+
+    image.src = "path1521.png";
+
+    image.onload = () => {
+
+        const maxWidth =
+            Math.min(280, window.innerWidth * .55);
+
+        const scale =
+            maxWidth / image.width;
+
+        const width =
+            image.width * scale;
+
+        const height =
+            image.height * scale;
+
+        const offscreen =
+            document.createElement("canvas");
+
+        offscreen.width = width;
+        offscreen.height = height;
+
+        const context =
+            offscreen.getContext("2d");
+
+        context.drawImage(
+            image,
+            0,
+            0,
+            width,
+            height
+        );
+
+        const pixels =
+            context.getImageData(
+                0,
+                0,
+                width,
+                height
+            ).data;
+
+        const startX =
+            (window.innerWidth - width) / 2;
+
+        const startY =
+            (window.innerHeight - height) / 2;
+
+        splashParticles = [];
+
+        /*
+         * Cada 3 píxeles crea una partícula.
+         * Si quieres MUCHÍSIMAS más partículas,
+         * cambia 3 por 2 o incluso 1.
+         */
+
+        const particleSize = 3;
+
+        for (
+            let y = 0;
+            y < height;
+            y += particleSize
+        ) {
+
+            for (
+                let x = 0;
+                x < width;
+                x += particleSize
+            ) {
+
+                const pixelIndex =
+                    (Math.floor(y) * width +
+                     Math.floor(x)) * 4;
+
+                const alpha =
+                    pixels[pixelIndex + 3];
+
+                if (alpha > 80) {
+
+                    const red =
+                        pixels[pixelIndex];
+
+                    const green =
+                        pixels[pixelIndex + 1];
+
+                    const blue =
+                        pixels[pixelIndex + 2];
+
+                    const targetX =
+                        startX + x;
+
+                    const targetY =
+                        startY + y;
+
+                    const angle =
+                        Math.random() *
+                        Math.PI * 2;
+
+                    const distance =
+                        80 +
+                        Math.random() * 180;
+
+                    splashParticles.push({
+
+                        x: targetX,
+
+                        y: targetY,
+
+                        targetX,
+
+                        targetY,
+
+                        explosionX:
+                            targetX +
+                            Math.cos(angle) *
+                            distance,
+
+                        explosionY:
+                            targetY +
+                            Math.sin(angle) *
+                            distance,
+
+                        size:
+                            1 +
+                            Math.random() * 2.5,
+
+                        red,
+
+                        green,
+
+                        blue,
+
+                        alpha:
+                            alpha / 255,
+
+                        rotation:
+                            Math.random() *
+                            Math.PI * 2,
+
+                        speed:
+                            .7 +
+                            Math.random() * 1.3
+
+                    });
+
+                }
+
+            }
+
+        }
+
+        /*
+         * Ocultamos el PNG original.
+         * El canvas se encargará de reconstruirlo.
+         */
+
+        splashLogo.style.opacity = "0";
+
+        splashStartTime =
+            performance.now();
+
+        animateSplash();
+
+    };
+
+}
+
+
+/* =====================================================
+   ANIMACIÓN
+===================================================== */
+
+function animateSplash(time) {
+
+    if (!time) {
+        time = performance.now();
+    }
+
+    const elapsed =
+        time - splashStartTime;
+
+    const progress =
+        Math.min(
+            elapsed / splashDuration,
+            1
+        );
+
+    splashContext.clearRect(
+        0,
+        0,
+        window.innerWidth,
+        window.innerHeight
+    );
+
+
+    /*
+     * FASE 1
+     *
+     * El logo permanece construido.
+     */
+
+    let explosionProgress = 0;
+
+    if (progress < .25) {
+
+        explosionProgress = 0;
+
+    }
+
+    /*
+     * FASE 2
+     *
+     * Se desintegra.
+     */
+
+    else if (progress < .52) {
+
+        const value =
+            (progress - .25) / .27;
+
+        explosionProgress =
+            easeInOutCubic(value);
+
+    }
+
+    /*
+     * FASE 3
+     *
+     * Permanece disperso.
+     */
+
+    else if (progress < .62) {
+
+        explosionProgress = 1;
+
+    }
+
+    /*
+     * FASE 4
+     *
+     * Las partículas regresan.
+     */
+
+    else {
+
+        const value =
+            (progress - .62) / .38;
+
+        explosionProgress =
+            1 - easeInOutCubic(value);
+
+    }
+
+
+    splashParticles.forEach(
+        particle => {
+
+            const x =
+                particle.targetX +
+                (
+                    particle.explosionX -
+                    particle.targetX
+                ) *
+                explosionProgress;
+
+            const y =
+                particle.targetY +
+                (
+                    particle.explosionY -
+                    particle.targetY
+                ) *
+                explosionProgress;
+
+
+            /*
+             * Pequeño movimiento orgánico
+             * mientras están dispersas.
+             */
+
+            const floating =
+                Math.sin(
+                    time * .002 +
+                    particle.targetX
+                ) *
+                2 *
+                explosionProgress;
+
+
+            const size =
+                particle.size *
+                (
+                    1 +
+                    explosionProgress * .35
+                );
+
+
+            splashContext.save();
+
+            splashContext.translate(
+                x,
+                y + floating
+            );
+
+            splashContext.rotate(
+                particle.rotation +
+                explosionProgress * 2
+            );
+
+
+            splashContext.fillStyle =
+                `rgba(
+                    ${particle.red},
+                    ${particle.green},
+                    ${particle.blue},
+                    ${particle.alpha}
+                )`;
+
+
+            splashContext.fillRect(
+                -size / 2,
+                -size / 2,
+                size,
+                size
+            );
+
+
+            splashContext.restore();
+
+        }
+    );
+
+
+    if (progress < 1) {
+
+        splashAnimationFrame =
+            requestAnimationFrame(
+                animateSplash
+            );
+
+    } else {
+
+        finishSplash();
+
+    }
+
+}
+
+
+/* =====================================================
+   EASING
+===================================================== */
+
+function easeInOutCubic(value) {
+
+    return value < .5
+
+        ? 4 * value * value * value
+
+        : 1 -
+          Math.pow(
+              -2 * value + 2,
+              3
+          ) / 2;
+
+}
+
+
+/* =====================================================
+   TERMINAR SPLASH
+===================================================== */
+
+function finishSplash() {
+
+    splashScreen.classList.add(
+        "finished"
+    );
+
+    setTimeout(() => {
+
+        splashScreen.remove();
+
+    }, 1000);
+
+}
+
+
+/* =====================================================
+   INICIAR
+===================================================== */
+
+createSplashParticles();
