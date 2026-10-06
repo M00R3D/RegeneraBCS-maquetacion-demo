@@ -221,11 +221,7 @@ button {
 
     display: grid;
 
-    /*
-       Dos paneles:
-       Voluntariados | Flora y fauna
-    */
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
 
     overflow: hidden;
 }
@@ -296,6 +292,8 @@ button {
 
     height: calc(100vh - 72px);
 
+    width: 100%;
+
     min-width: 0;
 
     overflow: hidden;
@@ -305,13 +303,8 @@ button {
     cursor: pointer;
 }
 
-/*
-   El segundo panel tiene una separación
-   muy sutil entre ambos.
-*/
-
 #floraPanel {
-    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    width: 100%;
 }
 
 /* =========================
@@ -901,12 +894,6 @@ footer {
         min-height: 380px;
     }
 
-    #floraPanel {
-        border-left: none;
-
-        border-top: 1px solid rgba(255, 255, 255, 0.15);
-    }
-
     .panel-content {
         left: 25px;
 
@@ -1063,3 +1050,330 @@ footer {
     }
 }
 
+/* =========================
+   VOLUNTARIADOS PREVIEW
+========================= */
+
+.volunteer-section {
+    max-width: 1200px;
+    margin: auto;
+    padding: 112px 30px 80px;
+}
+
+.volunteer-heading {
+    align-items: flex-end;
+    margin-bottom: 45px;
+}
+
+.volunteer-heading-right {
+    max-width: 380px;
+    align-self: flex-end;
+}
+
+.volunteer-heading-right p {
+    margin-bottom: 20px;
+}
+
+.section-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+
+    color: var(--green);
+
+    font-size: 13px;
+    font-weight: 600;
+
+    transition:
+        gap 0.3s ease,
+        color 0.3s ease;
+}
+
+.section-link:hover {
+    gap: 16px;
+    color: var(--green-light);
+}
+
+
+/* =========================
+   VOLUNTEER GRID
+========================= */
+
+.volunteer-grid {
+    display: grid;
+
+    grid-template-columns: repeat(3, 1fr);
+
+    gap: 22px;
+}
+
+
+/* =========================
+   VOLUNTEER CARD
+========================= */
+
+.volunteer-card {
+    overflow: hidden;
+
+    background: var(--white);
+
+    border-radius: 22px;
+
+    border: 1px solid rgba(0, 0, 0, 0.05);
+
+    transition:
+        transform 0.35s ease,
+        box-shadow 0.35s ease;
+}
+
+.volunteer-card:hover {
+    transform: translateY(-7px);
+
+    box-shadow:
+        0 20px 45px rgba(0, 0, 0, 0.09);
+}
+
+
+/* =========================
+   VOLUNTEER IMAGE
+========================= */
+
+.volunteer-image {
+    position: relative;
+
+    height: 230px;
+
+    background-size: cover;
+    background-position: center;
+
+    overflow: hidden;
+}
+
+.volunteer-image::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.02),
+            rgba(0, 0, 0, 0.25)
+        );
+
+    transition:
+        background 0.35s ease;
+}
+
+.volunteer-card:hover .volunteer-image::after {
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.04),
+            rgba(0, 0, 0, 0.12)
+        );
+}
+
+
+/* =========================
+   VOLUNTEER IMAGES
+========================= */
+
+.volunteer-image-one {
+    background-image:
+        url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1000&q=85");
+}
+
+.volunteer-image-two {
+    background-image:
+        url("https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1000&q=85");
+}
+
+.volunteer-image-three {
+    background-image:
+        url("https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=1000&q=85");
+}
+
+
+/* =========================
+   DATE BADGE
+========================= */
+
+.volunteer-date {
+    position: absolute;
+
+    top: 18px;
+    right: 18px;
+
+    z-index: 2;
+
+    padding: 8px 12px;
+
+    border-radius: 50px;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    color: var(--green);
+
+    font-size: 11px;
+
+    font-weight: 600;
+
+    backdrop-filter: blur(8px);
+}
+
+
+/* =========================
+   CARD CONTENT
+========================= */
+
+.volunteer-card-content {
+    padding: 24px;
+}
+
+.volunteer-category {
+    display: block;
+
+    margin-bottom: 9px;
+
+    color: var(--green-light);
+
+    font-size: 10px;
+
+    font-weight: 600;
+
+    letter-spacing: 2px;
+}
+
+.volunteer-card h3 {
+    margin-bottom: 15px;
+
+    font-family: "Playfair Display", serif;
+
+    font-size: 25px;
+
+    line-height: 1.1;
+}
+
+
+/* =========================
+   META
+========================= */
+
+.volunteer-meta {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px 15px;
+
+    margin-bottom: 16px;
+
+    color: #59645f;
+
+    font-size: 12px;
+}
+
+.volunteer-card-content p {
+    margin-bottom: 20px;
+
+    color: var(--gray);
+
+    font-size: 13px;
+
+    line-height: 1.65;
+}
+
+
+/* =========================
+   VOLUNTEER LINK
+========================= */
+
+.volunteer-link {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    color: var(--green);
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    transition:
+        gap 0.3s ease;
+}
+
+.volunteer-link:hover {
+    gap: 16px;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+    .volunteer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .volunteer-card:last-child {
+        grid-column: span 2;
+    }
+
+}
+
+@media (max-width: 800px) {
+
+    .volunteer-section {
+        padding:
+            102px 25px 80px;
+    }
+
+    .volunteer-heading {
+        align-items: flex-start;
+    }
+
+    .volunteer-heading-right {
+        max-width: 100%;
+    }
+
+    .volunteer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .volunteer-card:last-child {
+        grid-column: auto;
+    }
+
+}
+
+@media (max-width: 500px) {
+
+    .volunteer-section {
+        padding:
+            94px 20px 70px;
+    }
+
+    .volunteer-heading {
+        margin-bottom: 35px;
+    }
+
+    .volunteer-heading h2 {
+        font-size: 38px;
+    }
+
+    .volunteer-image {
+        height: 210px;
+    }
+
+    .volunteer-card-content {
+        padding: 21px;
+    }
+
+}
