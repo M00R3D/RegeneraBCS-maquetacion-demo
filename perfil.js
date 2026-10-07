@@ -1,22 +1,15 @@
-const usuario =
-    JSON.parse(
-        localStorage.getItem("usuarioRegenera")
-    );
+const usuario = window.RegeneraContent.getUser();
 
 
-if (!usuario) {
-
-    window.location.href = "login.html";
-
-}
+if (!usuario) window.location.replace("login.html");
 
 
 document.getElementById("profileName")
-    .textContent = usuario.nombre;
+    .textContent = usuario ? usuario.nombre : "";
 
 
 document.getElementById("profileEmail")
-    .textContent = usuario.correo;
+    .textContent = usuario ? usuario.correo : "";
 
 
 const participaciones =
@@ -30,41 +23,15 @@ document.getElementById(
 ).textContent = participaciones.length;
 
 
-const voluntariados = [
-
-    {
-        id: 1,
-        titulo: "Limpieza de Playa Balandra",
-        fecha: "12 Octubre 2026",
-        lugar: "Playa Balandra",
+const voluntariados = window.RegeneraContent
+    .getItems("voluntariado")
+    .map(actividad => ({
+        id: actividad.id,
+        titulo: actividad.titulo || actividad.title,
+        fecha: actividad.fecha || actividad.date || "Fecha por confirmar",
+        lugar: actividad.lugar || actividad.place || "Baja California Sur",
         estado: "Inscrito"
-    },
-
-    {
-        id: 2,
-        titulo: "Restauración de zona costera",
-        fecha: "18 Octubre 2026",
-        lugar: "El Manglito",
-        estado: "Inscrito"
-    },
-
-    {
-        id: 3,
-        titulo: "Monitoreo de fauna marina",
-        fecha: "25 Octubre 2026",
-        lugar: "Zona costera de La Paz",
-        estado: "Inscrito"
-    },
-
-    {
-        id: 4,
-        titulo: "Limpieza de espacios públicos",
-        fecha: "01 Noviembre 2026",
-        lugar: "Centro de La Paz",
-        estado: "Inscrito"
-    }
-
-];
+    }));
 
 
 const lista =

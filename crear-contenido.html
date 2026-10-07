@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear contenido · Regenera BCS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="contenido.css">
+</head>
+<body>
+    <header class="topbar">
+        <a href="index.html" class="logo">
+            <span class="logo-mark"><img src="path1521.png" alt="Logo"></span>
+            <span>Regenera<span>BCS</span></span>
+        </a>
+        <nav class="nav">
+            <a href="index.html">Inicio</a>
+            <a href="flora.html">Flora y fauna</a>
+            <a href="voluntariados.html">Voluntariados</a>
+            <a href="articulos.html">Artículos</a>
+            <a href="login.html" id="userNav" class="user-nav">Iniciar sesión</a>
+        </nav>
+    </header>
+    <main class="page create-page">
+        <section class="create-panel">
+            <span class="page-label">COMUNIDAD REGENERA</span>
+            <h1 id="createTitle">Crear publicación</h1>
+            <p id="createSubtitle">Comparte información con la comunidad.</p>
+            <form id="createContentForm">
+                <label for="title">Título</label>
+                <input id="title" name="title" type="text" maxlength="100" required>
+
+                <label for="category">Categoría</label>
+                <input id="category" name="category" type="text" maxlength="50" required>
+
+                <div data-field-group="voluntariado" hidden>
+                    <label for="date">Fecha</label>
+                    <input id="date" name="date" type="date" required>
+                    <label for="hour">Hora</label>
+                    <input id="hour" name="hour" type="time" required>
+                    <label for="place">Lugar</label>
+                    <input id="place" name="place" type="text" maxlength="100" required>
+                    <label for="capacity">Cupo de participantes</label>
+                    <input id="capacity" name="capacity" type="number" min="1" max="10000" required>
+                </div>
+
+                <label for="summary">Descripción breve</label>
+                <textarea id="summary" name="summary" rows="3" maxlength="300" required></textarea>
+
+                <label for="content">Información completa</label>
+                <textarea id="content" name="content" rows="8" maxlength="10000" required></textarea>
+
+                <label for="image">URL de imagen (opcional)</label>
+                <input id="image" name="image" type="url" placeholder="https://">
+                <button type="submit">Publicar</button>
+                <a class="create-cancel" href="index.html">Cancelar</a>
+            </form>
+        </section>
+    </main>
+    <footer class="page-footer">
+        <div class="footer-logo">Regenera<span>BCS</span></div>
+        <p>Turismo responsable · Baja California Sur</p>
+    </footer>
+    <script src="contenido.js"></script>
+</body>
+</html>

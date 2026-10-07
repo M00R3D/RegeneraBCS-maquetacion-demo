@@ -52,6 +52,10 @@
                 Reportar
             </a>
 
+            <a href="login.html" class="user-nav">
+                Iniciar sesión
+            </a>
+
         </nav>
 
         <button
@@ -91,6 +95,10 @@
             Reportar
         </a>
 
+        <a href="login.html" class="user-nav">
+            Iniciar sesión
+        </a>
+
     </nav>
 
 
@@ -107,6 +115,7 @@
         <section
             class="volunteer-section"
             id="voluntariados"
+            data-home-listing="voluntariado"
         >
 
             <div class="section-heading volunteer-heading">
@@ -368,6 +377,7 @@
                     <a
                         href="flora.html"
                         class="panel-button"
+                        id="floraDetailLink"
                     >
                         Explorar
 
@@ -482,7 +492,7 @@
             </div>
 
 
-            <div class="articles-grid">
+            <div class="articles-grid" data-home-listing="articulo">
 
 
                 <article class="article-card">
@@ -504,7 +514,7 @@
                             un impacto positivo.
                         </p>
 
-                        <a href="articulos.html">
+                        <a href="detalle.html?tipo=articulo&id=articulo-1">
                             Leer artículo →
                         </a>
 
@@ -532,7 +542,7 @@
                             nuestros espacios naturales.
                         </p>
 
-                        <a href="articulos.html">
+                        <a href="detalle.html?tipo=articulo&id=articulo-2">
                             Leer artículo →
                         </a>
 
@@ -560,7 +570,7 @@
                             nuestro impacto.
                         </p>
 
-                        <a href="articulos.html">
+                        <a href="detalle.html?tipo=articulo&id=articulo-3">
                             Leer artículo →
                         </a>
 
@@ -637,6 +647,7 @@
 
 
     <script src="script.js"></script>
+    <script src="contenido.js"></script>
 
 </body>
 

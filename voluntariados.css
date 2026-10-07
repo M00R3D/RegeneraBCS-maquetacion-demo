@@ -106,6 +106,7 @@
 }
 
 .volunteer-button {
+    display: inline-flex;
     margin-top: 22px;
     padding: 12px 17px;
     border: 0;
@@ -116,6 +117,7 @@
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    text-decoration: none;
     transition: background .2s ease, transform .2s ease;
 }
 

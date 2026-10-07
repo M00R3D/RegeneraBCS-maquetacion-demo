@@ -1,230 +1,75 @@
-const voluntariados = [
-    {
-        id: 1,
-        titulo: "Limpieza de Playa Balandra",
-        categoria: "limpieza",
-        fecha: "12 Octubre 2026",
-        hora: "08:00 AM",
-        lugar: "Playa Balandra",
-        cupo: 30,
-        inscritos: 18,
-        organizador: "Regenera BCS",
-        descripcion:
-            "Actividad comunitaria para retirar residuos y mantener limpia la zona costera."
-    },
-
-    {
-        id: 2,
-        titulo: "Restauración de zona costera",
-        categoria: "restauracion",
-        fecha: "18 Octubre 2026",
-        hora: "07:30 AM",
-        lugar: "El Manglito",
-        cupo: 20,
-        inscritos: 12,
-        organizador: "Iniciativa local",
-        descripcion:
-            "Actividad enfocada en restauración y cuidado de espacios naturales urbanos."
-    },
-
-    {
-        id: 3,
-        titulo: "Monitoreo de fauna marina",
-        categoria: "conservacion",
-        fecha: "25 Octubre 2026",
-        hora: "07:00 AM",
-        lugar: "Zona costera de La Paz",
-        cupo: 15,
-        inscritos: 9,
-        organizador: "Regenera BCS",
-        descripcion:
-            "Participación en una jornada de observación y registro de fauna marina."
-    },
-
-    {
-        id: 4,
-        titulo: "Limpieza de espacios públicos",
-        categoria: "limpieza",
-        fecha: "01 Noviembre 2026",
-        hora: "08:00 AM",
-        lugar: "Centro de La Paz",
-        cupo: 25,
-        inscritos: 7,
-        organizador: "Comunidad Regenera",
-        descripcion:
-            "Jornada comunitaria para recuperar y mantener espacios públicos."
-    }
-];
-
-
+const content = window.RegeneraContent;
 const grid = document.getElementById("volunteerGrid");
+const voluntariados = content.getItems("voluntariado");
+const escapeHtml = content.escapeHtml;
 
+function categoryFilter(item) {
+    const category = String(item.categoria || item.category || "").toLowerCase();
+    if (category.includes("limpieza")) return "limpieza";
+    if (category.includes("restaur")) return "restauracion";
+    if (category.includes("conserv")) return "conservacion";
+    return category.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
 
-function renderVoluntariados(lista = voluntariados) {
+function renderVoluntariados(list = voluntariados) {
+    grid.replaceChildren();
 
-    grid.innerHTML = "";
-
-    lista.forEach(voluntariado => {
-
-        const porcentaje =
-            (voluntariado.inscritos / voluntariado.cupo) * 100;
-
+    list.forEach(voluntariado => {
+        const title = voluntariado.titulo || voluntariado.title;
+        const category = voluntariado.categoria || voluntariado.category;
+        const date = content.formatDate(voluntariado.fecha || voluntariado.date || "Fecha por confirmar");
+        const hour = content.formatTime(voluntariado.hora || voluntariado.hour || "Horario por confirmar");
+        const place = voluntariado.lugar || voluntariado.place || "Baja California Sur";
+        const participants = Number(voluntariado.inscritos ?? voluntariado.participants ?? 0);
+        const capacity = Number(voluntariado.cupo ?? voluntariado.capacity ?? 0);
+        const description = voluntariado.descripcion || voluntariado.summary || "";
+        const percentage = capacity ? Math.min(100, participants / capacity * 100) : 0;
         const card = document.createElement("article");
-
         card.className = "volunteer-card";
+        const detail = content.detailUrl("voluntariado", voluntariado.id);
 
         card.innerHTML = `
-
             <div class="volunteer-card-top">
-
-                <span class="volunteer-category">
-                    ${voluntariado.categoria}
-                </span>
-
-                <span class="volunteer-status">
-                    Inscripciones abiertas
-                </span>
-
+                <span class="volunteer-category">${escapeHtml(category)}</span>
+                <span class="volunteer-status">${capacity && participants >= capacity ? "Cupo completo" : "Inscripciones abiertas"}</span>
             </div>
-
-            <h3>
-                ${voluntariado.titulo}
-            </h3>
-
+            <h3>${escapeHtml(title)}</h3>
             <div class="volunteer-info">
-
-                <span>
-                    📅 ${voluntariado.fecha}
-                </span>
-
-                <span>
-                    🕐 ${voluntariado.hora}
-                </span>
-
-                <span>
-                    📍 ${voluntariado.lugar}
-                </span>
-
+                <span>📅 ${escapeHtml(date)}</span>
+                <span>🕐 ${escapeHtml(hour)}</span>
+                <span>📍 ${escapeHtml(place)}</span>
             </div>
-
-            <p>
-                ${voluntariado.descripcion}
-            </p>
-
+            <p>${escapeHtml(description)}</p>
             <div class="volunteer-capacity">
-
                 <div class="capacity-text">
-
-                    <span>
-                        Participantes
-                    </span>
-
-                    <strong>
-                        ${voluntariado.inscritos}/${voluntariado.cupo}
-                    </strong>
-
+                    <span>Participantes</span>
+                    <strong>${participants}${capacity ? `/${capacity}` : ""}</strong>
                 </div>
-
-                <div class="capacity-bar">
-                    <span style="width:${porcentaje}%"></span>
-                </div>
-
+                <div class="capacity-bar"><span style="width:${percentage}%"></span></div>
             </div>
-
-            <button
-                class="volunteer-button"
-                onclick="participar(${voluntariado.id})">
-
-                Ver voluntariado →
-
-            </button>
-
+            <a class="volunteer-button" href="${detail}">Ver voluntariado →</a>
         `;
 
+        card.addEventListener("click", event => {
+            if (event.target.closest("a, button")) return;
+            window.location.href = detail;
+        });
         grid.appendChild(card);
-
     });
-
 }
-
-
-function participar(id) {
-
-    const voluntariado =
-        voluntariados.find(v => v.id === id);
-
-    const usuario =
-        JSON.parse(localStorage.getItem("usuarioRegenera"));
-
-    if (!usuario) {
-
-        alert(
-            "Para participar en un voluntariado necesitas iniciar sesión."
-        );
-
-        window.location.href = "login.html";
-
-        return;
-    }
-
-    const participaciones =
-        JSON.parse(
-            localStorage.getItem("participacionesRegenera")
-        ) || [];
-
-    if (participaciones.includes(id)) {
-
-        alert(
-            "Ya estás inscrito en este voluntariado."
-        );
-
-        return;
-    }
-
-    participaciones.push(id);
-
-    localStorage.setItem(
-        "participacionesRegenera",
-        JSON.stringify(participaciones)
-    );
-
-    alert(
-        `Te has inscrito en "${voluntariado.titulo}".`
-    );
-
-}
-
 
 document.querySelectorAll(".filter").forEach(button => {
-
     button.addEventListener("click", () => {
-
-        document
-            .querySelectorAll(".filter")
-            .forEach(btn => btn.classList.remove("active"));
-
+        document.querySelectorAll(".filter").forEach(filter => filter.classList.remove("active"));
         button.classList.add("active");
 
-        const categoria =
-            button.dataset.filter;
-
-        if (categoria === "todos") {
-
-            renderVoluntariados();
-
-        } else {
-
-            renderVoluntariados(
-                voluntariados.filter(
-                    v => v.categoria === categoria
-                )
-            );
-
-        }
-
+        const category = button.dataset.filter;
+        renderVoluntariados(
+            category === "todos"
+                ? voluntariados
+                : voluntariados.filter(item => categoryFilter(item) === category)
+        );
     });
-
 });
-
 
 renderVoluntariados();

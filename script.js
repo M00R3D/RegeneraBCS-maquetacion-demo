@@ -5,6 +5,7 @@
 const floraData = [
 
     {
+        id: "flora-1",
         title: "Ballena gris",
         description:
             "Conoce una de las especies marinas más representativas de Baja California Sur.",
@@ -13,6 +14,7 @@ const floraData = [
     },
 
     {
+        id: "flora-2",
         title: "Vida marina",
         description:
             "Descubre la diversidad de especies que habitan nuestros mares.",
@@ -21,6 +23,7 @@ const floraData = [
     },
 
     {
+        id: "flora-3",
         title: "Ecosistemas costeros",
         description:
             "Explora los ecosistemas que conectan el desierto con el océano.",
@@ -29,6 +32,7 @@ const floraData = [
     },
 
     {
+        id: "flora-4",
         title: "Desierto sudcaliforniano",
         description:
             "Conoce la flora y fauna que se ha adaptado a uno de los ambientes más particulares de México.",
@@ -61,6 +65,8 @@ const floraCurrent =
 const floraTotal =
     document.querySelector("#floraTotal");
 
+const floraDetailLink =
+    document.querySelector("#floraDetailLink");
 
 // =====================================================
 // CONTADOR
@@ -95,6 +101,9 @@ function changeFlora(index) {
 
         floraDescription.textContent =
             floraData[index].description;
+
+        floraDetailLink.href =
+            `detalle.html?tipo=flora&id=${floraData[index].id}`;
 
         floraCurrent.textContent =
             String(index + 1).padStart(2, "0");
@@ -174,6 +183,9 @@ document
 
 floraBackground.style.backgroundImage =
     `url("${floraData[0].image}")`;
+
+floraDetailLink.href =
+    `detalle.html?tipo=flora&id=${floraData[0].id}`;
 
 
 // =====================================================
