@@ -68,6 +68,37 @@ if (!currentUser || currentUser.rol !== "administrador") {
         document.getElementById("adminStats").innerHTML = stats.map(([label, value]) => `
             <article class="admin-stat"><span>${escapeHtml(label)}</span><strong>${value}</strong></article>`).join("");
 
+        const inscriptions = content.getCollection("inscripciones");
+        const attendance = content.getCollection("asistencias").filter(row => row.confirmada);
+        const users = content.getCollection("usuarios");
+        const earnedMedals = content.getCollection("usuarioMedallas");
+        const participationStats = [
+            ["Voluntariados", volunteers.length],
+            ["Inscripciones activas", inscriptions.filter(row => ["activa", "completada"].includes(row.estado)).length],
+            ["Asistencias registradas", attendance.length],
+            ["Usuarios activos", users.filter(row => row.estado === "activo").length],
+            ["Artículos publicados", articles.filter(row => row.estado === "publicado").length],
+            ["Medallas desbloqueadas", earnedMedals.length]
+        ];
+        document.getElementById("participationStats").innerHTML = participationStats.map(([label, value]) => `
+            <div class="admin-impact-stat"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`).join("");
+        const activityLabels = {
+            ASISTENCIA_REGISTRADA: "Registró asistencia",
+            MEDALLA_DESBLOQUEADA: "Desbloqueó una medalla",
+            PUNTOS_OTORGADOS: "Recibió puntos",
+            ARTICULO_APROBADO: "Artículo aprobado"
+        };
+        const participationActivity = content.getCollection("auditoria")
+            .filter(row => activityLabels[row.accion])
+            .slice(0, 8);
+        document.getElementById("participationActivity").innerHTML = participationActivity.length
+            ? participationActivity.map(row => `<div class="participation-activity-item">
+                <strong>${escapeHtml(content.getById("usuarios", row.usuario_id)?.nombre || "Sistema")}</strong>
+                <span>${escapeHtml(activityLabels[row.accion])} · ${escapeHtml(row.detalles)}</span>
+                <time>${escapeHtml(content.formatDate(row.fecha))}</time>
+            </div>`).join("")
+            : '<p class="admin-empty">Las acciones de participación aparecerán aquí.</p>';
+
         const pendingArticles = articles.filter(row => row.estado === "pendiente");
         const pendingVolunteers = volunteers.filter(row => row.estado === "pendiente");
         const pending = [

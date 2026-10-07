@@ -9,6 +9,10 @@
         auditoria: "regenera_auditoria",
         lugares: "regenera_lugares",
         floraFauna: "regenera_flora_fauna",
+        medallas: "regenera_medallas",
+        usuarioMedallas: "regenera_usuario_medallas",
+        puntos: "regenera_puntos",
+        codigosAsistencia: "regenera_codigos_asistencia",
         sesion: "regenera_sesion"
     };
     const categories = [
@@ -20,6 +24,19 @@
         "educación ambiental"
     ];
     let generatedId = 0;
+    const demoMedals = [
+        { medalla_id: "medalla-primer-paso", nombre: "Primer paso", icono: "🌱", descripcion: "Completaste tu primera actividad ambiental.", puntos: 20, criterio: "Completar 1 voluntariado." },
+        { medalla_id: "medalla-guardian-costa", nombre: "Guardián de la costa", icono: "🌊", descripcion: "Has participado activamente en el cuidado de nuestros ecosistemas costeros.", puntos: 30, criterio: "Completar 3 actividades de limpieza o conservación." },
+        { medalla_id: "medalla-guardian-territorio", nombre: "Guardián del territorio", icono: "🌵", descripcion: "Tu participación ya ha llegado a distintos rincones de BCS.", puntos: 30, criterio: "Participar en actividades en 3 lugares diferentes." },
+        { medalla_id: "medalla-voluntario-constante", nombre: "Voluntario constante", icono: "🤝", descripcion: "La constancia de tu participación fortalece a la comunidad.", puntos: 40, criterio: "Completar 5 voluntariados." },
+        { medalla_id: "medalla-impacto-local", nombre: "Impacto local", icono: "🌎", descripcion: "Tu compromiso contribuye a un impacto ambiental sostenido.", puntos: 60, criterio: "Completar 10 voluntariados." },
+        { medalla_id: "medalla-voz-ambiental", nombre: "Voz ambiental", icono: "📝", descripcion: "Compartiste conocimiento ambiental con la comunidad.", puntos: 20, criterio: "Publicar 1 artículo aprobado." },
+        { medalla_id: "medalla-comunicador", nombre: "Comunicador ambiental", icono: "📚", descripcion: "Has contribuido varias veces a la conversación ambiental.", puntos: 35, criterio: "Publicar 3 artículos aprobados." },
+        { medalla_id: "medalla-educador", nombre: "Educador ambiental", icono: "🌿", descripcion: "Tu voz ayuda a acercar el cuidado ambiental a más personas.", puntos: 50, criterio: "Publicar 5 artículos aprobados." },
+        { medalla_id: "medalla-explorador", nombre: "Explorador", icono: "🔬", descripcion: "Has participado en diversas formas de cuidado ambiental.", puntos: 30, criterio: "Completar actividades de 3 categorías diferentes." },
+        { medalla_id: "medalla-regenera", nombre: "Regenera BCS", icono: "🏆", descripcion: "Un reconocimiento especial por combinar participación y comunicación.", puntos: 100, criterio: "Completar 10 voluntariados y publicar 5 artículos." }
+    ];
+    const coastalCategories = new Set(["limpieza", "conservación"]);
 
     const demoUsers = [
         { usuario_id: "usr-admin", nombre: "Administración Regenera", correo: "admin@regenera.test", password: "demo123", foto: "", rol: "administrador", organizadorVerificado: false, fechaRegistro: "2026-01-01T09:00:00.000Z", estado: "activo" },
@@ -106,7 +123,11 @@
             notificaciones: "notificaciones_id",
             auditoria: "auditoria_id",
             lugares: "lugares_id",
-            floraFauna: "floraFauna_id"
+            floraFauna: "floraFauna_id",
+            medallas: "medalla_id",
+            usuarioMedallas: "usuario_medalla_id",
+            puntos: "puntos_id",
+            codigosAsistencia: "codigo_asistencia_id"
         };
         const primaryKey = primaryKeys[name];
         return primaryKey ? getCollection(name).find(row => String(row[primaryKey]) === String(id)) : undefined;
@@ -137,7 +158,11 @@
             ],
             auditoria: [
                 { auditoria_id: "audit-01", usuario_id: "usr-admin", accion: "ADMIN_PUBLICO_ARTICULO", entidad: "articulos", entidad_id: "art-01", fecha: "2026-08-12T10:00:00.000Z", ip: "demo", detalles: "Publicación inicial de demostración." }
-            ]
+            ],
+            medallas: demoMedals,
+            usuarioMedallas: [],
+            puntos: [],
+            codigosAsistencia: []
         };
 
         Object.entries(seeds).forEach(([name, rows]) => {
@@ -177,6 +202,7 @@
         }
 
         migrateLegacyContent();
+        synchronizeExistingRewards();
     }
 
     function migrateLegacyContent() {
@@ -388,6 +414,7 @@
         const rows = getCollection(type);
         const item = rows.find(row => row[config.pk] === id);
         if (!item) throw new Error("No se encontró el contenido solicitado.");
+        const previousState = item.estado;
         item.estado = state;
         item.fechaActualizacion = new Date().toISOString();
         if (type === "articulos" && state === "publicado" && !item.fechaPublicacion) item.fechaPublicacion = item.fechaActualizacion;
@@ -404,6 +431,11 @@
             voluntariados: { publicado: "ADMIN_PUBLICO_VOLUNTARIADO", cancelado: "ADMIN_CANCELA_VOLUNTARIADO", finalizado: "ADMIN_FINALIZA_VOLUNTARIADO" }
         }[type][state];
         audit(admin.usuario_id, action, type, id, `Estado actualizado a ${state}.`);
+        if (type === "articulos" && state === "publicado" && previousState !== "publicado") {
+            audit(admin.usuario_id, "ARTICULO_APROBADO", "articulos", id, `Aprobó el artículo “${item.titulo}”.`);
+            awardPoints(item[config.owner], 25, "Artículo aprobado", "articulos", id);
+            checkUserAchievements(item[config.owner]);
+        }
         return item;
     }
 
@@ -593,6 +625,318 @@
         saveCollection("auditoria", records);
     }
 
+    function awardPoints(userId, amount, reason, entity, entityId, options = {}) {
+        const key = `${userId}:${reason}:${entity}:${entityId}`;
+        const points = getCollection("puntos");
+        const existing = points.find(row => row.claveUnica === key);
+        if (existing) return existing;
+        const entry = {
+            puntos_id: createId("pts"),
+            usuario_id: userId,
+            cantidad: amount,
+            motivo: reason,
+            entidad: entity,
+            entidad_id: entityId,
+            claveUnica: key,
+            fecha: new Date().toISOString()
+        };
+        points.unshift(entry);
+        saveCollection("puntos", points);
+        if (options.audit !== false) audit(userId, "PUNTOS_OTORGADOS", entity, entityId, `+${amount} puntos: ${reason}.`);
+        if (options.notify !== false) addNotification(userId, "puntos", "Puntos por participación", `Ganaste ${amount} puntos: ${reason}.`, { tipo: entity, id: entityId });
+        return entry;
+    }
+
+    function getAchievementMetrics(userId) {
+        const volunteerById = new Map(getCollection("voluntariados").map(item => [item.voluntariados_id, item]));
+        const attendanceRows = getCollection("asistencias").filter(row => row.usuario_id === userId && row.confirmada);
+        const completedVolunteers = attendanceRows.map(row => volunteerById.get(row.voluntariado_id)).filter(Boolean);
+        const categoriesCompleted = new Set(completedVolunteers.map(item => normalizeCategory(item.categoria)));
+        const locationsCompleted = new Set(completedVolunteers.map(item => item.lugar_id).filter(Boolean));
+        const publishedArticles = getCollection("articulos").filter(row => row.autor_id === userId && row.estado === "publicado");
+        const points = getCollection("puntos").filter(row => row.usuario_id === userId).reduce((total, row) => total + Number(row.cantidad || 0), 0);
+        const minutes = completedVolunteers.reduce((total, volunteer) => {
+            const start = /^(\d{2}):(\d{2})$/.exec(volunteer.horarioInicio || "");
+            const end = /^(\d{2}):(\d{2})$/.exec(volunteer.horarioFin || "");
+            if (!start || !end) return total;
+            const startMinutes = Number(start[1]) * 60 + Number(start[2]);
+            let endMinutes = Number(end[1]) * 60 + Number(end[2]);
+            if (endMinutes < startMinutes) endMinutes += 24 * 60;
+            return total + endMinutes - startMinutes;
+        }, 0);
+        return {
+            asistencias: attendanceRows.length,
+            voluntariados: completedVolunteers.length,
+            articulos: publishedArticles.length,
+            actividadesCosta: completedVolunteers.filter(item => coastalCategories.has(normalizeCategory(item.categoria))).length,
+            categorias: categoriesCompleted,
+            lugares: locationsCompleted,
+            horas: minutes / 60,
+            puntos: points
+        };
+    }
+
+    function evaluateAchievement(medal, metrics) {
+        let current = 0;
+        let target = 1;
+        let progressText = "";
+        let remaining = "";
+        switch (medal.medalla_id) {
+            case "medalla-primer-paso":
+                current = Math.min(1, metrics.voluntariados);
+                progressText = `${current} / 1 voluntariado`;
+                remaining = current ? "Logro completado." : "Completa tu primera actividad.";
+                break;
+            case "medalla-guardian-costa":
+                current = metrics.actividadesCosta;
+                target = 3;
+                progressText = `${Math.min(current, target)} / ${target} actividades de costa`;
+                remaining = `${Math.max(0, target - current)} actividad${target - current === 1 ? "" : "es"} de limpieza o conservación.`;
+                break;
+            case "medalla-guardian-territorio":
+                current = metrics.lugares.size;
+                target = 3;
+                progressText = `${Math.min(current, target)} / ${target} lugares`;
+                remaining = `${Math.max(0, target - current)} lugar${target - current === 1 ? "" : "es"} diferente${target - current === 1 ? "" : "s"}.`;
+                break;
+            case "medalla-voluntario-constante":
+                current = metrics.voluntariados;
+                target = 5;
+                progressText = `${Math.min(current, target)} / ${target} voluntariados`;
+                remaining = `Completa ${Math.max(0, target - current)} actividad${target - current === 1 ? "" : "es"} más.`;
+                break;
+            case "medalla-impacto-local":
+                current = metrics.voluntariados;
+                target = 10;
+                progressText = `${Math.min(current, target)} / ${target} voluntariados`;
+                remaining = `Completa ${Math.max(0, target - current)} actividades más.`;
+                break;
+            case "medalla-voz-ambiental":
+                current = metrics.articulos;
+                progressText = `${Math.min(current, target)} / 1 artículo`;
+                remaining = current ? "Logro completado." : "Publica un artículo aprobado.";
+                break;
+            case "medalla-comunicador":
+                current = metrics.articulos;
+                target = 3;
+                progressText = `${Math.min(current, target)} / ${target} artículos`;
+                remaining = `Publica ${Math.max(0, target - current)} artículo${target - current === 1 ? "" : "s"} aprobado${target - current === 1 ? "" : "s"}.`;
+                break;
+            case "medalla-educador":
+                current = metrics.articulos;
+                target = 5;
+                progressText = `${Math.min(current, target)} / ${target} artículos`;
+                remaining = `Publica ${Math.max(0, target - current)} artículo${target - current === 1 ? "" : "s"} aprobado${target - current === 1 ? "" : "s"}.`;
+                break;
+            case "medalla-explorador":
+                current = metrics.categorias.size;
+                target = 3;
+                progressText = `${Math.min(current, target)} / ${target} categorías`;
+                remaining = `Explora ${Math.max(0, target - current)} categoría${target - current === 1 ? "" : "s"} más.`;
+                break;
+            case "medalla-regenera":
+                current = Math.min(10, metrics.voluntariados, metrics.articulos * 2);
+                target = 10;
+                progressText = `${metrics.voluntariados} / 10 voluntariados · ${metrics.articulos} / 5 artículos`;
+                remaining = `Completa ${Math.max(0, 10 - metrics.voluntariados)} voluntariados y publica ${Math.max(0, 5 - metrics.articulos)} artículos.`;
+                break;
+            default:
+                current = 0;
+                progressText = "Criterio personalizado";
+                remaining = medal.criterio;
+        }
+        const awarded = getCollection("usuarioMedallas").some(row => row.usuario_id === metrics.usuario_id && row.medalla_id === medal.medalla_id);
+        const completed = medal.medalla_id === "medalla-regenera"
+            ? metrics.voluntariados >= 10 && metrics.articulos >= 5
+            : current >= target;
+        return { ...medal, current: Math.min(current, target), target, ratio: target ? Math.min(1, current / target) : 0, progressText, remaining, unlocked: awarded || completed };
+    }
+
+    function getAchievementProgress(userId) {
+        const metrics = getAchievementMetrics(userId);
+        metrics.usuario_id = userId;
+        const earnedIds = new Set(getCollection("usuarioMedallas").filter(row => row.usuario_id === userId).map(row => row.medalla_id));
+        return getCollection("medallas").map(medal => ({
+            ...evaluateAchievement(medal, metrics),
+            unlocked: earnedIds.has(medal.medalla_id),
+            unlockedAt: getCollection("usuarioMedallas").find(row => row.usuario_id === userId && row.medalla_id === medal.medalla_id)?.fechaDesbloqueo || null
+        }));
+    }
+
+    function checkUserAchievements(userId) {
+        const earned = getCollection("usuarioMedallas");
+        const earnedIds = new Set(earned.filter(row => row.usuario_id === userId).map(row => row.medalla_id));
+        const metrics = getAchievementMetrics(userId);
+        const unlocked = [];
+        getCollection("medallas").forEach(medal => {
+            if (earnedIds.has(medal.medalla_id)) return;
+            const progress = evaluateAchievement(medal, { ...metrics, usuario_id: userId });
+            if (!progress.unlocked) return;
+            const relation = {
+                usuario_medalla_id: createId("umed"),
+                usuario_id: userId,
+                medalla_id: medal.medalla_id,
+                fechaDesbloqueo: new Date().toISOString()
+            };
+            earned.push(relation);
+            earnedIds.add(medal.medalla_id);
+            unlocked.push(medal);
+            audit(userId, "MEDALLA_DESBLOQUEADA", "medallas", medal.medalla_id, `Desbloqueó ${medal.nombre}.`);
+            addNotification(userId, "medalla", "¡Nueva medalla desbloqueada!", `Obtuviste ${medal.nombre}: ${medal.descripcion}`, { tipo: "medalla", id: medal.medalla_id });
+            awardPoints(userId, Number(medal.puntos) || 0, `Medalla ${medal.nombre}`, "medallas", medal.medalla_id);
+        });
+        if (unlocked.length) saveCollection("usuarioMedallas", earned);
+        return unlocked;
+    }
+
+    function getUserImpact(userId) {
+        const metrics = getAchievementMetrics(userId);
+        const enrollments = getCollection("inscripciones").filter(row => row.usuario_id === userId && ["activa", "completada"].includes(row.estado));
+        const earned = getCollection("usuarioMedallas").filter(row => row.usuario_id === userId);
+        const achievements = getAchievementProgress(userId);
+        const nextAchievement = achievements.filter(row => !row.unlocked).sort((a, b) => b.ratio - a.ratio)[0] || null;
+        return {
+            voluntariados: metrics.voluntariados,
+            inscripciones: enrollments.length,
+            horas: metrics.horas,
+            asistencias: metrics.asistencias,
+            articulos: metrics.articulos,
+            medallas: earned.length,
+            puntos: metrics.puntos,
+            nextAchievement,
+            achievements
+        };
+    }
+
+    function synchronizeExistingRewards() {
+        const users = getCollection("usuarios");
+        const enrollments = getCollection("inscripciones");
+        const attendanceRows = getCollection("asistencias").filter(row => row.confirmada);
+        users.forEach(user => {
+            enrollments.filter(row => row.usuario_id === user.usuario_id && ["activa", "completada"].includes(row.estado))
+                .forEach(row => awardPoints(user.usuario_id, 10, "Inscripción a un voluntariado", "inscripciones", row.inscripciones_id, { notify: false, audit: false }));
+            const categorySet = new Set();
+            attendanceRows.filter(row => row.usuario_id === user.usuario_id).forEach(row => {
+                const volunteer = getById("voluntariados", row.voluntariado_id);
+                if (!volunteer) return;
+                awardPoints(user.usuario_id, 50, "Asistencia confirmada", "asistencias", row.asistencia_id, { notify: false, audit: false });
+                const category = normalizeCategory(volunteer.categoria);
+                if (!categorySet.has(category)) {
+                    awardPoints(user.usuario_id, 10, `Primera actividad de categoría: ${category}`, "categorias", category, { notify: false, audit: false });
+                    categorySet.add(category);
+                }
+                if (category === "conservación") awardPoints(user.usuario_id, 30, "Actividad de conservación completada", "voluntariados", volunteer.voluntariados_id, { notify: false, audit: false });
+            });
+            getCollection("articulos").filter(row => row.autor_id === user.usuario_id && row.estado === "publicado")
+                .forEach(row => awardPoints(user.usuario_id, 25, "Artículo aprobado", "articulos", row.articulos_id, { notify: false, audit: false }));
+        });
+        users.forEach(user => checkUserAchievements(user.usuario_id));
+    }
+
+    function randomAttendanceToken() {
+        const bytes = new Uint8Array(4);
+        if (window.crypto?.getRandomValues) window.crypto.getRandomValues(bytes);
+        else for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
+        return [...bytes].map(value => value.toString(16).padStart(2, "0")).join("").toUpperCase().slice(0, 6);
+    }
+
+    function getAttendanceCode(volunteerId) {
+        const codes = getCollection("codigosAsistencia").filter(row => row.voluntariado_id === volunteerId);
+        return codes.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion))[0] || null;
+    }
+
+    function renderAchievementCard(achievement) {
+        const progress = Math.round(achievement.ratio * 100);
+        return `<article class="medal-card ${achievement.unlocked ? "is-unlocked" : "is-locked"}">
+            <div class="medal-icon" aria-hidden="true">${achievement.unlocked ? escapeHtml(achievement.icono) : "🔒"}</div>
+            <div class="medal-card-content">
+                <span class="medal-state">${achievement.unlocked ? "Desbloqueada" : "En progreso"}</span>
+                <h3>${escapeHtml(achievement.nombre)}</h3>
+                <p>${escapeHtml(achievement.descripcion)}</p>
+                <div class="medal-progress" role="progressbar" aria-label="Progreso: ${escapeHtml(achievement.nombre)}" aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100">
+                    <span style="width:${progress}%"></span>
+                </div>
+                <span class="medal-progress-label">${escapeHtml(achievement.unlocked ? achievement.progressText : `${achievement.progressText} · ${achievement.remaining}`)}</span>
+            </div>
+        </article>`;
+    }
+
+    function generateAttendanceCode(volunteerId, expiresAt = "") {
+        const organizer = getCurrentUser();
+        if (!organizer || !canManageVolunteer(organizer)) throw new Error("Solo administración o un organizador verificado puede generar códigos.");
+        const volunteer = getById("voluntariados", volunteerId);
+        if (!volunteer || organizer.rol !== "administrador" && volunteer.organizador_id !== organizer.usuario_id) throw new Error("No tienes permiso para este voluntariado.");
+        if (volunteer.estado === "cancelado") throw new Error("No se puede generar un código para un voluntariado cancelado.");
+        const now = new Date();
+        const expiration = expiresAt ? new Date(expiresAt) : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        if (Number.isNaN(expiration.getTime()) || expiration <= now) throw new Error("La fecha de expiración debe ser posterior al momento actual.");
+        const codes = getCollection("codigosAsistencia");
+        codes.filter(row => row.voluntariado_id === volunteerId && row.activo).forEach(row => { row.activo = false; });
+        let code = `REGENERA-${randomAttendanceToken()}`;
+        while (codes.some(row => row.codigo === code)) code = `REGENERA-${randomAttendanceToken()}`;
+        const entry = {
+            codigo_asistencia_id: createId("code"),
+            voluntariado_id: volunteerId,
+            codigo: code,
+            fechaCreacion: now.toISOString(),
+            fechaExpiracion: expiration.toISOString(),
+            activo: true
+        };
+        codes.unshift(entry);
+        saveCollection("codigosAsistencia", codes);
+        audit(organizer.usuario_id, "CODIGO_ASISTENCIA_GENERADO", "voluntariados", volunteerId, `Generó el código ${code}, expira ${expiration.toISOString()}.`);
+        return entry;
+    }
+
+    function completeAttendance(volunteer, userId, method, actorId) {
+        const inscriptions = getCollection("inscripciones");
+        const inscription = inscriptions.find(row => row.usuario_id === userId && row.voluntariado_id === volunteer.voluntariados_id && row.estado === "activa");
+        if (!inscription) return { ok: false, message: "No estás inscrito en este voluntariado." };
+        const now = new Date();
+        const attendance = {
+            asistencia_id: createId("asis"),
+            usuario_id: userId,
+            voluntariado_id: volunteer.voluntariados_id,
+            fecha: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`,
+            hora: now.toTimeString().slice(0, 5),
+            metodo: method === "QR" ? "QR" : "codigo",
+            confirmada: true
+        };
+        const assistances = getCollection("asistencias");
+        assistances.push(attendance);
+        saveCollection("asistencias", assistances);
+        inscription.estado = "completada";
+        saveCollection("inscripciones", inscriptions);
+        addNotification(userId, "asistencia", "¡Asistencia registrada!", `Tu participación en "${volunteer.titulo}" fue confirmada.`, { tipo: "voluntariado", id: volunteer.voluntariados_id });
+        audit(actorId || userId, "ASISTENCIA_REGISTRADA", "voluntariados", volunteer.voluntariados_id, `Asistencia registrada para ${userId} mediante ${attendance.metodo}.`);
+        awardPoints(userId, 50, "Asistencia confirmada", "asistencias", attendance.asistencia_id);
+        const previousAttendances = getCollection("asistencias").filter(row => row.usuario_id === userId && row.confirmada && row.asistencia_id !== attendance.asistencia_id);
+        const hadCategory = previousAttendances.some(row => getById("voluntariados", row.voluntariado_id)?.categoria === volunteer.categoria);
+        if (!hadCategory) awardPoints(userId, 10, `Primera actividad de categoría: ${volunteer.categoria}`, "categorias", volunteer.categoria);
+        if (volunteer.categoria === "conservación") awardPoints(userId, 30, "Actividad de conservación completada", "voluntariados", volunteer.voluntariados_id);
+        checkUserAchievements(userId);
+        return { ok: true, attendance };
+    }
+
+    function registerAttendance(volunteerId, codeValue, method = "codigo") {
+        const user = getCurrentUser();
+        if (!user) return { ok: false, reason: "login", message: "Inicia sesión para registrar tu asistencia." };
+        const volunteer = getById("voluntariados", volunteerId);
+        if (!volunteer) return { ok: false, message: "No se encontró este voluntariado." };
+        if (volunteer.estado === "cancelado") return { ok: false, message: "Este voluntariado fue cancelado." };
+        if (!getCollection("inscripciones").some(row => row.usuario_id === user.usuario_id && row.voluntariado_id === volunteerId && ["activa", "completada"].includes(row.estado))) {
+            return { ok: false, message: "No estás inscrito en este voluntariado." };
+        }
+        if (getCollection("asistencias").some(row => row.usuario_id === user.usuario_id && row.voluntariado_id === volunteerId && row.confirmada)) {
+            return { ok: false, message: "Ya registraste tu asistencia." };
+        }
+        const value = String(codeValue || "").trim().toUpperCase();
+        const code = getCollection("codigosAsistencia").find(row => row.voluntariado_id === volunteerId && row.codigo === value && row.activo);
+        if (!code) return { ok: false, message: "El código no es válido." };
+        if (code.fechaExpiracion && new Date(code.fechaExpiracion) <= new Date()) return { ok: false, message: "El código de asistencia ha expirado." };
+        return completeAttendance(volunteer, user.usuario_id, method, user.usuario_id);
+    }
+
     function normalizeCategory(value) {
         const normalized = String(value || "").trim().toLowerCase();
         return categories.find(category => category.toLowerCase() === normalized) || "conservación";
@@ -641,6 +985,7 @@
         saveCollection("inscripciones", inscriptions);
         addNotification(user.usuario_id, "inscripcion", "Inscripción confirmada", `Te inscribiste en "${volunteer.titulo}".`, { tipo: "voluntariado", id: volunteerId });
         audit(user.usuario_id, "USUARIO_INSCRIPCION_VOLUNTARIADO", "voluntariados", volunteerId, `Inscripción ${inscription.inscripciones_id}.`);
+        awardPoints(user.usuario_id, 10, "Inscripción a un voluntariado", "inscripciones", inscription.inscripciones_id);
         return { ok: true, inscription };
     }
 
@@ -649,19 +994,11 @@
         if (!current || !canManageVolunteer(current)) return { ok: false, message: "Solo administración o un organizador verificado puede confirmar asistencia." };
         const volunteer = getById("voluntariados", volunteerId);
         if (!volunteer || current.rol !== "administrador" && volunteer.organizador_id !== current.usuario_id) return { ok: false, message: "No tienes permiso para gestionar este voluntariado." };
-        const inscriptions = getCollection("inscripciones");
-        const inscription = inscriptions.find(row => row.usuario_id === userId && row.voluntariado_id === volunteerId && row.estado === "activa");
-        if (!inscription) return { ok: false, message: "No hay una inscripción activa para esta persona." };
-        const assistances = getCollection("asistencias");
-        if (assistances.some(row => row.usuario_id === userId && row.voluntariado_id === volunteerId && row.confirmada)) return { ok: false, message: "La asistencia ya está confirmada." };
-        const now = new Date();
-        assistances.push({ asistencia_id: createId("asis"), usuario_id: userId, voluntariado_id: volunteerId, fecha: now.toISOString().slice(0, 10), hora: now.toTimeString().slice(0, 5), metodo: "QR", confirmada: true });
-        saveCollection("asistencias", assistances);
-        inscription.estado = "completada";
-        saveCollection("inscripciones", inscriptions);
-        addNotification(userId, "asistencia", "Asistencia confirmada", `Tu participación en "${volunteer.titulo}" fue registrada.`, { tipo: "voluntariado", id: volunteerId });
-        audit(current.usuario_id, "CONFIRMA_ASISTENCIA", "voluntariados", volunteerId, `Asistencia confirmada para usuario ${userId}.`);
-        return { ok: true };
+        if (volunteer.estado === "cancelado") return { ok: false, message: "Este voluntariado fue cancelado." };
+        if (getCollection("asistencias").some(row => row.usuario_id === userId && row.voluntariado_id === volunteerId && row.confirmada)) return { ok: false, message: "La asistencia ya está confirmada." };
+        const result = completeAttendance(volunteer, userId, "codigo", current.usuario_id);
+        if (!result.ok) return { ...result, message: "No hay una inscripción activa para esta persona." };
+        return result;
     }
 
     function visibleDetail(type, id) {
@@ -698,8 +1035,10 @@
 
     function formatTime(value) {
         const match = /^(\d{2}):(\d{2})$/.exec(String(value || ""));
-        if (!match) return value || "Horario por confirmar";
-        const date = new Date(2000, 0, 1, Number(match[1]), Number(match[2]));
+        const date = match
+            ? new Date(2000, 0, 1, Number(match[1]), Number(match[2]))
+            : new Date(value);
+        if (!match && (!value || Number.isNaN(date.getTime()))) return value || "Horario por confirmar";
         return new Intl.DateTimeFormat("es-MX", { hour: "numeric", minute: "2-digit" }).format(date);
     }
 
@@ -732,6 +1071,7 @@
             };
             addLink("admin", "Dashboard", "admin.html", user.rol === "administrador");
             addLink("create", "Crear contenido", "crear-contenido.html?tipo=articulo", true);
+            addLink("medals", "Mis medallas", "medallas.html", true);
 
             if (!nav.querySelector(`[data-session-action="logout"]`)) {
                 const button = document.createElement("button");
@@ -838,6 +1178,7 @@
                         </div>
                         <p>${escapeHtml(volunteer.descripcion)}</p>
                         ${statusBadge(volunteer.estado)}
+                        <span class="volunteer-points">✦ +50 puntos al completar</span>
                         <a class="volunteer-link" href="${detail}">Ver voluntariado <span>→</span></a>
                     </div>
                 </article>`;
@@ -924,9 +1265,12 @@
         const mine = isVolunteer && user ? inscriptions.some(row => row.usuario_id === user.usuario_id && ["activa", "completada"].includes(row.estado)) : false;
         const count = inscriptions.length;
         const full = Number(item.capacidad) > 0 && count >= Number(item.capacidad);
+        const hasAttendance = Boolean(isVolunteer && user && getCollection("asistencias").some(row => row.usuario_id === user.usuario_id && row.voluntariado_id === id && row.confirmada));
         const isOwner = Boolean(user && isVolunteer && item.organizador_id === user.usuario_id);
         const admin = user?.rol === "administrador";
         const manages = canManageVolunteer(user) && (admin || isOwner);
+        const attendanceCode = manages && isVolunteer ? getAttendanceCode(id) : null;
+        const codeExpired = attendanceCode?.fechaExpiracion && new Date(attendanceCode.fechaExpiracion) <= new Date();
         const returnPage = { articulo: "articulos.html", flora: "flora.html", voluntariado: "voluntariados.html" }[type] || "index.html";
         const details = isVolunteer ? `
             <div class="detail-meta">
@@ -946,15 +1290,31 @@
             <div class="detail-meta"><span>${escapeHtml(item.tipo)}</span><span>${escapeHtml(item.estadoConservacion)}</span><span>${escapeHtml(item.ubicacion)}</span></div>
             <dl class="detail-facts"><div><dt>Nombre científico</dt><dd>${escapeHtml(item.nombreCientifico)}</dd></div><div><dt>Hábitat</dt><dd>${escapeHtml(item.habitat)}</dd></div></dl>` : "";
         const canJoin = isVolunteer && item.estado === "publicado";
-        const participates = canJoin ? `<div class="participation-actions">
+        const participates = canJoin && !hasAttendance ? `<div class="participation-actions">
             <button class="detail-action" id="participateButton" type="button" ${mine || full ? "disabled" : ""}>${mine ? "Ya estás inscrito" : full ? "Cupo lleno" : "Inscribirme"}</button>
             <p class="form-message ${mine ? "is-success" : full ? "is-error" : ""}" id="participationMessage" role="status" aria-live="polite">${mine ? "Ya tienes una inscripción para este voluntariado." : full ? "Cupo lleno." : ""}</p>
         </div>` : "";
+        const userAttendance = isVolunteer && user && mine && !hasAttendance
+            ? `<form class="attendance-code-form" id="attendanceCodeForm" data-volunteer-id="${escapeHtml(id)}">
+                <label for="attendanceCodeInput">Ingresa el código de asistencia</label>
+                <div><input id="attendanceCodeInput" name="codigo" autocomplete="one-time-code" placeholder="REGENERA-XXXXXX" required><button type="submit">Confirmar asistencia</button></div>
+                <p class="form-message" id="attendanceCodeMessage" role="status" aria-live="polite"></p>
+            </form>`
+            : "";
         const management = manages ? `<section class="participant-panel"><h2>Personas inscritas (${inscriptions.length})</h2>
+            <div class="attendance-control">
+                <div><span class="detail-label">CONTROL DE ASISTENCIA</span><h3>${escapeHtml(item.titulo)}</h3><p>${count} / ${escapeHtml(item.capacidad)} participantes · ${escapeHtml(formatDate(item.fecha))}</p></div>
+                <label for="attendanceExpiry">Expiración del código (opcional)</label>
+                <div class="attendance-code-actions"><input id="attendanceExpiry" type="datetime-local"><button type="button" class="attendance-button" id="generateAttendanceCode">Generar nuevo código</button></div>
+                ${attendanceCode ? `<div class="attendance-code-display"><span>CÓDIGO ACTIVO${codeExpired ? " · EXPIRADO" : ""}</span><strong>${escapeHtml(attendanceCode.codigo)}</strong><small>Expira ${escapeHtml(formatDate(attendanceCode.fechaExpiracion))} ${escapeHtml(formatTime(attendanceCode.fechaExpiracion))}</small>
+                    <button type="button" class="attendance-button secondary-button" id="showAttendanceQr" ${codeExpired ? "disabled" : ""}>Mostrar código QR</button></div>` : '<p>Aún no hay un código generado para esta actividad.</p>'}
+                <p class="form-message" id="attendanceControlMessage" role="status" aria-live="polite"></p>
+            </div>
+            <h3 class="participant-list-title">Participantes inscritos</h3>
             ${inscriptions.map(enrollment => {
                 const participant = getById("usuarios", enrollment.usuario_id);
                 const confirmed = getCollection("asistencias").some(row => row.usuario_id === enrollment.usuario_id && row.voluntariado_id === id && row.confirmada);
-                return `<div class="participant-row"><span>${escapeHtml(participant?.nombre || "Usuario")} · ${escapeHtml(participant?.correo || "")}</span><span>${statusBadge(enrollment.estado)}</span>${enrollment.estado === "activa" ? `<button type="button" class="attendance-button" data-attendance-user="${escapeHtml(enrollment.usuario_id)}" ${confirmed ? "disabled" : ""}>${confirmed ? "Asistencia confirmada" : "Confirmar asistencia (QR)"}</button>` : ""}</div>`;
+                return `<div class="participant-row"><span>${escapeHtml(participant?.nombre || "Usuario")} · ${escapeHtml(participant?.correo || "")}</span><span>${statusBadge(confirmed ? "completada" : "pendiente")}</span>${enrollment.estado === "activa" ? `<button type="button" class="attendance-button" data-attendance-user="${escapeHtml(enrollment.usuario_id)}" ${confirmed ? "disabled" : ""}>${confirmed ? "Asistencia confirmada" : "Registrar asistencia"}</button>` : ""}</div>`;
             }).join("") || "<p>Aún no hay inscripciones.</p>"}</section>` : "";
 
         document.title = `${title} · Regenera BCS`;
@@ -966,12 +1326,44 @@
                 ${details}
                 ${isFlora && item.nombreCientifico ? `<p class="detail-scientific">${escapeHtml(item.nombreCientifico)}</p>` : ""}
                 <div class="detail-copy">${(isVolunteer ? item.descripcion : item.contenido || item.descripcion).split(/\n+/).filter(Boolean).map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join("")}</div>
+                ${hasAttendance
+                    ? '<p class="attendance-confirmed">✓ Asistencia registrada · Voluntariado completado</p>'
+                    : isVolunteer && user && mine ? '<p class="impact-reward-note">Al completar esta actividad recibirás <strong>+50 puntos</strong> y podrás avanzar en tus medallas.</p>' : ""}
                 ${author ? `<p class="detail-author">${isVolunteer ? "Organiza" : "Autor"}: ${escapeHtml(author.nombre)}</p>` : ""}
-                ${participates}${management}
+                ${participates}${userAttendance}${management}
                 <a class="section-link" href="${returnPage}">← Volver</a>
             </div>
         </article>`;
 
+        const generateCodeButton = document.getElementById("generateAttendanceCode");
+        generateCodeButton?.addEventListener("click", () => {
+            const message = document.getElementById("attendanceControlMessage");
+            try {
+                const expiry = document.getElementById("attendanceExpiry").value;
+                generateAttendanceCode(id, expiry);
+                renderDetailPage();
+            } catch (error) {
+                message.textContent = error.message;
+                message.className = "form-message is-error";
+            }
+        });
+        document.getElementById("showAttendanceQr")?.addEventListener("click", () => {
+            const payload = JSON.stringify({ voluntariado_id: id, codigoAsistencia: attendanceCode.codigo });
+            const dialog = document.createElement("dialog");
+            dialog.className = "qr-dialog";
+            dialog.innerHTML = `<form method="dialog"><button class="qr-dialog-close" aria-label="Cerrar">×</button></form><span class="detail-label">CÓDIGO QR DE ASISTENCIA</span><h2>${escapeHtml(item.titulo)}</h2><div class="qr-code-image">${window.RegeneraQr.toSvg(payload)}</div><p>El código QR contiene únicamente el ID de la actividad y su código de asistencia.</p><strong>${escapeHtml(attendanceCode.codigo)}</strong>`;
+            document.body.append(dialog);
+            dialog.addEventListener("close", () => dialog.remove(), { once: true });
+            dialog.showModal();
+        });
+        document.getElementById("attendanceCodeForm")?.addEventListener("submit", event => {
+            event.preventDefault();
+            const result = registerAttendance(id, new FormData(event.currentTarget).get("codigo"));
+            const message = document.getElementById("attendanceCodeMessage");
+            message.textContent = result.message || (result.ok ? "¡Asistencia registrada!" : "No se pudo registrar la asistencia.");
+            message.className = `form-message ${result.ok ? "is-success" : "is-error"}`;
+            if (result.ok) renderDetailPage();
+        });
         document.getElementById("participateButton")?.addEventListener("click", () => {
             const result = joinVolunteer(id);
             const message = document.getElementById("participationMessage");
@@ -1129,6 +1521,14 @@
         getVolunteerParticipants,
         joinVolunteer,
         markAttendance,
+        registerAttendance,
+        generateAttendanceCode,
+        getAttendanceCode,
+        getUserImpact,
+        getAchievementProgress,
+        checkUserAchievements,
+        awardPoints,
+        renderAchievementCard,
         visibleDetail,
         renderFloraListing,
         detailUrl,

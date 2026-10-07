@@ -32,6 +32,7 @@ function renderVolunteers(list = volunteers) {
                 </div>
                 <div class="capacity-bar" aria-label="Ocupación del cupo"><span style="width:${fullness}%"></span></div>
                 <p>${escapeHtml(volunteer.descripcion)}</p>
+                <span class="volunteer-points">✦ +50 puntos al completar</span>
                 <a class="volunteer-button" href="${detail}">Ver voluntariado →</a>
             </div>
         </article>`;

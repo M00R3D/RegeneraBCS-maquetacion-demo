@@ -1,0 +1,439 @@
+.profile-role {
+    display: inline-flex;
+    margin: 7px 0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #e8f1eb;
+    color: #286347;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.impact-section .section-heading {
+    margin-bottom: 18px;
+}
+
+.impact-section .stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 13px;
+    margin: 0;
+}
+
+.impact-section .stat-card strong {
+    color: #174d3c;
+}
+
+.profile-section-link,
+.medals-back-link {
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.medal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.medal-card {
+    display: grid;
+    grid-template-columns: 60px minmax(0, 1fr);
+    align-items: start;
+    gap: 14px;
+    padding: 20px;
+    border: 1px solid rgba(20,32,27,.09);
+    border-radius: 16px;
+    background: #fff;
+}
+
+.medal-card.is-locked {
+    background: #f7f8f5;
+    color: #707971;
+}
+
+.medal-icon {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    border-radius: 50%;
+    background: #e7f0e9;
+    font-size: 28px;
+}
+
+.medal-card.is-locked .medal-icon {
+    background: #eceeea;
+    filter: grayscale(1);
+    opacity: .75;
+    font-size: 22px;
+}
+
+.medal-card-content {
+    min-width: 0;
+}
+
+.medal-state {
+    color: var(--green-light);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.3px;
+    text-transform: uppercase;
+}
+
+.medal-card h3 {
+    margin: 5px 0 7px;
+    color: #1c3027;
+    font-family: "Playfair Display", serif;
+    font-size: 21px;
+    line-height: 1.2;
+    text-transform: capitalize;
+}
+
+.medal-card p {
+    margin: 0 0 13px;
+    color: var(--gray);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.medal-progress {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e9ece8;
+}
+
+.medal-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: #3e8c6b;
+    transition: width .25s ease;
+}
+
+.is-locked .medal-progress span {
+    background: #a1b6a7;
+}
+
+.medal-progress-label {
+    display: block;
+    margin-top: 7px;
+    color: var(--gray);
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.next-achievement-section > div:last-child > .medal-card {
+    max-width: 720px;
+}
+
+.profile-action-message {
+    min-height: 1.4em;
+    margin: 16px 0;
+    font-size: 13px;
+}
+
+.profile-action-message:empty {
+    display: none;
+}
+
+.profile-action-message.is-success {
+    color: #286347;
+}
+
+.profile-action-message.is-error {
+    color: #963e34;
+}
+
+.profile-code-form {
+    display: grid;
+    gap: 6px;
+    width: min(100%, 440px);
+    margin-top: 14px;
+}
+
+.profile-code-form label,
+.attendance-code-form label,
+.attendance-control > label {
+    color: var(--gray);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.profile-code-form > div,
+.attendance-code-form > div,
+.attendance-code-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.profile-code-form input,
+.attendance-code-form input,
+.attendance-code-actions input {
+    min-width: 140px;
+    flex: 1;
+    padding: 9px 11px;
+    border: 1px solid rgba(20,32,27,.15);
+    border-radius: 8px;
+    font: inherit;
+    font-size: 12px;
+}
+
+.profile-code-form button,
+.attendance-code-form button {
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--green);
+    color: white;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.profile-code-form button:disabled,
+.profile-code-form input:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
+
+.attendance-confirmed {
+    margin-top: 10px;
+    color: #286347 !important;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.impact-reward-note {
+    margin: 18px 0;
+    padding: 13px 15px;
+    border-left: 3px solid #78a98a;
+    background: #f1f6f1;
+    color: #42574b;
+    font-size: 13px;
+}
+
+.participant-panel {
+    margin: 30px 0;
+    padding: 22px;
+    border: 1px solid rgba(20,32,27,.09);
+    border-radius: 16px;
+    background: #fbfcfa;
+}
+
+.participant-panel > h2,
+.participant-list-title {
+    margin: 18px 0 12px;
+    color: #1c3027;
+    font-family: "Playfair Display", serif;
+    font-size: 22px;
+}
+
+.attendance-control {
+    display: grid;
+    gap: 10px;
+    padding: 18px;
+    border: 1px solid rgba(20,32,27,.08);
+    border-radius: 12px;
+    background: white;
+}
+
+.attendance-control h3 {
+    margin: 5px 0;
+    font-family: "Playfair Display", serif;
+    font-size: 21px;
+}
+
+.attendance-control p,
+.attendance-code-display small {
+    color: var(--gray);
+    font-size: 12px;
+}
+
+.attendance-code-actions {
+    align-items: center;
+}
+
+.attendance-code-display {
+    display: grid;
+    justify-items: start;
+    gap: 7px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #eef5ef;
+}
+
+.attendance-code-display > span {
+    color: var(--gray);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.attendance-code-display strong {
+    color: #164d3b;
+    font-size: 22px;
+    letter-spacing: 2px;
+}
+
+.participant-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(20,32,27,.08);
+    font-size: 12px;
+}
+
+.participant-row > span:first-child {
+    flex: 1;
+}
+
+.medals-page {
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 120px 28px 80px;
+}
+
+.medals-page-heading {
+    max-width: 680px;
+    margin: 24px 0 35px;
+}
+
+.medals-page-heading h1 {
+    margin: 8px 0;
+    font-family: "Playfair Display", serif;
+    font-size: clamp(42px, 7vw, 66px);
+}
+
+.medals-page-heading p {
+    color: var(--gray);
+    line-height: 1.7;
+}
+
+.medals-impact-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 55px;
+}
+
+.medals-impact-summary > div {
+    display: grid;
+    gap: 11px;
+    padding: 18px;
+    border: 1px solid rgba(20,32,27,.08);
+    border-radius: 14px;
+    background: white;
+}
+
+.medals-impact-summary span {
+    color: var(--gray);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.medals-impact-summary strong {
+    color: #174d3c;
+    font-family: "Playfair Display", serif;
+    font-size: 30px;
+}
+
+.qr-dialog {
+    width: min(92vw, 430px);
+    padding: 30px;
+    border: 0;
+    border-radius: 20px;
+    color: #1c3027;
+    text-align: center;
+}
+
+.qr-dialog::backdrop {
+    background: rgba(13,30,23,.62);
+}
+
+.qr-dialog h2 {
+    margin: 8px 0 18px;
+    font-family: "Playfair Display", serif;
+}
+
+.qr-dialog p {
+    color: var(--gray);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.qr-dialog > strong {
+    color: var(--green);
+    letter-spacing: 2px;
+}
+
+.qr-code-image {
+    width: min(100%, 270px);
+    margin: 0 auto;
+    padding: 12px;
+    border: 1px solid rgba(20,32,27,.08);
+    border-radius: 12px;
+    background: white;
+}
+
+.qr-code-image svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    shape-rendering: crispEdges;
+}
+
+.qr-dialog form {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.qr-dialog-close {
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 50%;
+    background: #edf1ed;
+    color: #31513f;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+@media (max-width: 700px) {
+    .impact-section .stats-grid,
+    .medal-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .medals-impact-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .medal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .medal-card {
+        grid-template-columns: 48px minmax(0, 1fr);
+        gap: 11px;
+        padding: 15px;
+    }
+
+    .medal-icon {
+        width: 44px;
+        height: 44px;
+        font-size: 23px;
+    }
+
+    .impact-section .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="pages.css">
     <link rel="stylesheet" href="perfil.css">
     <link rel="stylesheet" href="contenido.css">
+    <link rel="stylesheet" href="reconocimientos.css">
 
 </head>
 
@@ -82,7 +83,7 @@
             <p id="profileEmail">
                 usuario@email.com
             </p>
-            <span class="profile-role" id="profileRole"></span>
+            <span class="profile-role" id="profileRole">Participante ambiental</span>
             <p id="profileJoined"></p>
 
         </div>
@@ -91,44 +92,54 @@
 
 
 
-    <section class="stats-grid">
-
-        <div class="stat-card">
-
-            <span>
-                VOLUNTARIADOS
-            </span>
-
-            <strong id="totalParticipaciones">
-                0
-            </strong>
-
+    <section class="profile-section impact-section">
+        <div class="section-heading">
+            <div><span>PARTICIPACIÓN Y RECONOCIMIENTO</span><h2>Mi impacto</h2></div>
         </div>
-
+        <div class="stats-grid">
 
         <div class="stat-card">
-
-            <span>COMPLETADOS</span>
-
+            <span>VOLUNTARIADOS COMPLETADOS</span>
             <strong id="totalCompletados">0</strong>
-
         </div>
 
+        <div class="stat-card">
+            <span>ASISTENCIAS</span>
+            <strong id="impactAssistance">0</strong>
+        </div>
 
         <div class="stat-card">
-
             <span>HORAS APOYADAS</span>
-
             <strong id="totalHoras">0</strong>
-
         </div>
 
         <div class="stat-card">
-            <span>LUGARES APOYADOS</span>
-            <strong id="totalLugares">0</strong>
-
+            <span>PUNTOS</span>
+            <strong id="impactPoints">0</strong>
         </div>
+        <div class="stat-card">
+            <span>ARTÍCULOS APROBADOS</span>
+            <strong id="impactArticles">0</strong>
+        </div>
+        <div class="stat-card">
+            <span>MEDALLAS</span>
+            <strong id="impactBadges">0</strong>
+        </div>
+        </div>
+    </section>
 
+    <section class="profile-section next-achievement-section">
+        <div class="section-heading"><div><span>PRÓXIMO LOGRO</span><h2>Tu siguiente medalla</h2></div></div>
+        <div id="nextAchievement"></div>
+    </section>
+    <p id="profileActionMessage" class="profile-action-message" role="status" aria-live="polite"></p>
+
+    <section class="profile-section">
+        <div class="section-heading">
+            <div><span>RECONOCIMIENTOS</span><h2>Mis medallas</h2></div>
+            <a class="profile-section-link" href="medallas.html">Ver todas →</a>
+        </div>
+        <div class="medal-grid medal-grid-preview" id="earnedMedals"></div>
     </section>
 
     <section class="profile-section" id="organizerSection" hidden>
@@ -151,6 +162,10 @@
         <div class="participation-list" id="attendanceList"></div>
     </section>
 
+    <section class="profile-section">
+        <div class="section-heading"><div><span>COMUNIDAD</span><h2>Mis artículos publicados</h2></div></div>
+        <div class="participation-list" id="publishedArticles"></div>
+    </section>
 
 
     <section class="profile-section">

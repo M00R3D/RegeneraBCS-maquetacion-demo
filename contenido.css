@@ -156,6 +156,54 @@
     margin: 0;
 }
 
+.volunteer-points {
+    display: inline-flex;
+    width: fit-content;
+    margin: 2px 0 12px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: #f0f5ed;
+    color: #52744f;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.attendance-code-form {
+    display: grid;
+    gap: 8px;
+    max-width: 480px;
+    margin: 20px 0;
+    padding: 17px;
+    border: 1px solid rgba(20,32,27,.09);
+    border-radius: 12px;
+    background: #f8faf7;
+}
+
+.attendance-code-form input {
+    min-width: 0;
+    flex: 1;
+    padding: 11px 12px;
+    border: 1px solid rgba(20,32,27,.16);
+    border-radius: 8px;
+    font: inherit;
+}
+
+.attendance-code-form button {
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--green);
+    color: white;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.attendance-code-form .form-message {
+    margin: 0;
+}
+
 .detail-body h1,
 .create-panel h1,
 .detail-not-found h1 {
