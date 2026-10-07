@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="contenido.css">
 </head>
 
 <body>
@@ -100,6 +101,14 @@
 
             </div>
 
+            <div class="flora-filter-row">
+                <label for="floraFilter">Mostrar</label>
+                <select id="floraFilter">
+                    <option value="todos">Flora y fauna</option>
+                    <option value="flora">Flora</option>
+                    <option value="fauna">Fauna</option>
+                </select>
+            </div>
 
             <div class="page-grid" data-content-listing="flora">
 
@@ -258,5 +267,10 @@
     </footer>
 
     <script src="contenido.js"></script>
+    <script>
+        document.getElementById("floraFilter").addEventListener("change", () => {
+            window.RegeneraContent.renderFloraListing();
+        });
+    </script>
 </body>
 </html>

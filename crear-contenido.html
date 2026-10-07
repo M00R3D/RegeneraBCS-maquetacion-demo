@@ -19,7 +19,7 @@
             <a href="flora.html">Flora y fauna</a>
             <a href="voluntariados.html">Voluntariados</a>
             <a href="articulos.html">Artículos</a>
-            <a href="login.html" id="userNav" class="user-nav">Iniciar sesión</a>
+            <a href="perfil.html">Mi perfil</a>
         </nav>
     </header>
     <main class="page create-page">
@@ -27,22 +27,39 @@
             <span class="page-label">COMUNIDAD REGENERA</span>
             <h1 id="createTitle">Crear publicación</h1>
             <p id="createSubtitle">Comparte información con la comunidad.</p>
+            <div class="form-message" id="createMessage" role="status" aria-live="polite"></div>
             <form id="createContentForm">
                 <label for="title">Título</label>
                 <input id="title" name="title" type="text" maxlength="100" required>
 
                 <label for="category">Categoría</label>
-                <input id="category" name="category" type="text" maxlength="50" required>
+                <select id="category" name="category" required>
+                    <option value="">Selecciona una categoría</option>
+                    <option value="limpieza">Limpieza</option>
+                    <option value="restauración">Restauración</option>
+                    <option value="reforestación">Reforestación</option>
+                    <option value="monitoreo">Monitoreo</option>
+                    <option value="conservación">Conservación</option>
+                    <option value="educación ambiental">Educación ambiental</option>
+                </select>
 
                 <div data-field-group="voluntariado" hidden>
                     <label for="date">Fecha</label>
                     <input id="date" name="date" type="date" required>
-                    <label for="hour">Hora</label>
-                    <input id="hour" name="hour" type="time" required>
-                    <label for="place">Lugar</label>
-                    <input id="place" name="place" type="text" maxlength="100" required>
+                    <label for="hourStart">Hora de inicio</label>
+                    <input id="hourStart" name="hourStart" type="time" required>
+                    <label for="hourEnd">Hora de término</label>
+                    <input id="hourEnd" name="hourEnd" type="time" required>
+                    <label for="placeId">Lugar</label>
+                    <select id="placeId" name="lugar_id" required></select>
+                    <label for="location">Punto de encuentro o indicaciones</label>
+                    <input id="location" name="location" type="text" maxlength="200" required>
                     <label for="capacity">Cupo de participantes</label>
                     <input id="capacity" name="capacity" type="number" min="1" max="10000" required>
+                    <label for="requirements">Requisitos</label>
+                    <textarea id="requirements" name="requirements" rows="2" maxlength="1000"></textarea>
+                    <label for="materials">Materiales</label>
+                    <textarea id="materials" name="materials" rows="2" maxlength="1000"></textarea>
                 </div>
 
                 <label for="summary">Descripción breve</label>
@@ -53,7 +70,7 @@
 
                 <label for="image">URL de imagen (opcional)</label>
                 <input id="image" name="image" type="url" placeholder="https://">
-                <button type="submit">Publicar</button>
+                <button type="submit">Enviar a revisión</button>
                 <a class="create-cancel" href="index.html">Cancelar</a>
             </form>
         </section>

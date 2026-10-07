@@ -1,246 +1,75 @@
-// =====================================================
-// DATOS DE FLORA Y FAUNA
-// =====================================================
+const content = window.RegeneraContent;
+const floraData = content.getPublicFlora().map(item => ({
+    id: item.floraFauna_id,
+    title: item.nombre,
+    description: item.descripcion,
+    image: item.imagenes[0] || ""
+}));
 
-const floraData = [
-
-    {
-        id: "flora-1",
-        title: "Ballena gris",
-        description:
-            "Conoce una de las especies marinas más representativas de Baja California Sur.",
-        image:
-            "https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=1800&q=85"
-    },
-
-    {
-        id: "flora-2",
-        title: "Vida marina",
-        description:
-            "Descubre la diversidad de especies que habitan nuestros mares.",
-        image:
-            "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=1800&q=85"
-    },
-
-    {
-        id: "flora-3",
-        title: "Ecosistemas costeros",
-        description:
-            "Explora los ecosistemas que conectan el desierto con el océano.",
-        image:
-            "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=85"
-    },
-
-    {
-        id: "flora-4",
-        title: "Desierto sudcaliforniano",
-        description:
-            "Conoce la flora y fauna que se ha adaptado a uno de los ambientes más particulares de México.",
-        image:
-            "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1800&q=85"
-    }
-
-];
-
-
-// =====================================================
-// ELEMENTOS DEL CARRUSEL
-// =====================================================
-
-const floraPanel =
-    document.querySelector("#floraPanel");
-
-const floraBackground =
-    floraPanel.querySelector(".panel-background");
-
-const floraTitle =
-    document.querySelector("#floraTitle");
-
-const floraDescription =
-    document.querySelector("#floraDescription");
-
-const floraCurrent =
-    document.querySelector("#floraCurrent");
-
-const floraTotal =
-    document.querySelector("#floraTotal");
-
-const floraDetailLink =
-    document.querySelector("#floraDetailLink");
-
-// =====================================================
-// CONTADOR
-// =====================================================
-
-floraTotal.textContent =
-    String(floraData.length).padStart(2, "0");
-
-
-// =====================================================
-// ESTADO
-// =====================================================
+const floraPanel = document.querySelector("#floraPanel");
+const floraBackground = floraPanel.querySelector(".panel-background");
+const floraTitle = document.querySelector("#floraTitle");
+const floraDescription = document.querySelector("#floraDescription");
+const floraCurrent = document.querySelector("#floraCurrent");
+const floraTotal = document.querySelector("#floraTotal");
+const floraDetailLink = document.querySelector("#floraDetailLink");
 
 let floraIndex = 0;
-
-
-// =====================================================
-// CAMBIO DEL PANEL
-// =====================================================
+let floraTimer;
 
 function changeFlora(index) {
-
+    const species = floraData[index];
     floraBackground.style.opacity = "0";
-
-    setTimeout(() => {
-
-        floraBackground.style.backgroundImage =
-            `url("${floraData[index].image}")`;
-
-        floraTitle.textContent =
-            floraData[index].title;
-
-        floraDescription.textContent =
-            floraData[index].description;
-
-        floraDetailLink.href =
-            `detalle.html?tipo=flora&id=${floraData[index].id}`;
-
-        floraCurrent.textContent =
-            String(index + 1).padStart(2, "0");
-
+    window.setTimeout(() => {
+        floraBackground.style.backgroundImage = `url("${species.image}")`;
+        floraTitle.textContent = species.title;
+        floraDescription.textContent = species.description;
+        floraDetailLink.href = content.detailUrl("flora", species.id);
+        floraCurrent.textContent = String(index + 1).padStart(2, "0");
         floraBackground.style.opacity = "1";
-
     }, 350);
-
 }
-
-
-// =====================================================
-// SIGUIENTE
-// =====================================================
 
 function nextFlora() {
-
-    floraIndex++;
-
-    if (floraIndex >= floraData.length) {
-        floraIndex = 0;
-    }
-
+    floraIndex = (floraIndex + 1) % floraData.length;
     changeFlora(floraIndex);
 }
-
-
-// =====================================================
-// ANTERIOR
-// =====================================================
 
 function previousFlora() {
-
-    floraIndex--;
-
-    if (floraIndex < 0) {
-        floraIndex = floraData.length - 1;
-    }
-
+    floraIndex = (floraIndex - 1 + floraData.length) % floraData.length;
     changeFlora(floraIndex);
 }
 
+function startFloraTimer() {
+    window.clearInterval(floraTimer);
+    floraTimer = window.setInterval(nextFlora, 6000);
+}
 
-// =====================================================
-// BOTÓN SIGUIENTE
-// =====================================================
-
-document
-    .querySelector("#floraNext")
-    .addEventListener("click", (event) => {
-
+if (floraData.length) {
+    floraTotal.textContent = String(floraData.length).padStart(2, "0");
+    changeFlora(floraIndex);
+    document.querySelector("#floraNext").addEventListener("click", event => {
         event.stopPropagation();
-
         nextFlora();
-
     });
-
-
-// =====================================================
-// BOTÓN ANTERIOR
-// =====================================================
-
-document
-    .querySelector("#floraPrev")
-    .addEventListener("click", (event) => {
-
+    document.querySelector("#floraPrev").addEventListener("click", event => {
         event.stopPropagation();
-
         previousFlora();
-
     });
+    floraPanel.addEventListener("mouseenter", () => window.clearInterval(floraTimer));
+    floraPanel.addEventListener("mouseleave", startFloraTimer);
+    startFloraTimer();
+} else {
+    floraPanel.hidden = true;
+}
 
+const menuButton = document.querySelector("#menuButton");
+const mobileMenu = document.querySelector("#mobileMenu");
 
-// =====================================================
-// INICIALIZAR
-// =====================================================
-
-floraBackground.style.backgroundImage =
-    `url("${floraData[0].image}")`;
-
-floraDetailLink.href =
-    `detalle.html?tipo=flora&id=${floraData[0].id}`;
-
-
-// =====================================================
-// CAMBIO AUTOMÁTICO
-// =====================================================
-
-let floraTimer =
-    setInterval(nextFlora, 6000);
-
-
-// =====================================================
-// PAUSAR AL PASAR EL MOUSE
-// =====================================================
-
-floraPanel.addEventListener("mouseenter", () => {
-
-    clearInterval(floraTimer);
-
-});
-
-
-floraPanel.addEventListener("mouseleave", () => {
-
-    floraTimer =
-        setInterval(nextFlora, 6000);
-
-});
-
-
-// =====================================================
-// MENÚ MOBILE
-// =====================================================
-
-const menuButton =
-    document.querySelector("#menuButton");
-
-const mobileMenu =
-    document.querySelector("#mobileMenu");
-
-
-menuButton.addEventListener("click", () => {
-
+menuButton?.addEventListener("click", () => {
     mobileMenu.classList.toggle("active");
-
 });
 
-
-mobileMenu
-    .querySelectorAll("a")
-    .forEach(link => {
-
-        link.addEventListener("click", () => {
-
-            mobileMenu.classList.remove("active");
-
-        });
-
-    });
+mobileMenu?.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => mobileMenu.classList.remove("active"));
+});

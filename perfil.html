@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="pages.css">
     <link rel="stylesheet" href="perfil.css">
+    <link rel="stylesheet" href="contenido.css">
 
 </head>
 
@@ -53,10 +54,6 @@
             Artículos
         </a>
 
-        <button id="logoutButton">
-            Cerrar sesión
-        </button>
-
     </nav>
 
 </header>
@@ -68,7 +65,7 @@
     <section class="profile-header">
 
         <div class="profile-avatar">
-            J
+            <img id="profilePhoto" alt="">
         </div>
 
 
@@ -85,6 +82,8 @@
             <p id="profileEmail">
                 usuario@email.com
             </p>
+            <span class="profile-role" id="profileRole"></span>
+            <p id="profileJoined"></p>
 
         </div>
 
@@ -109,29 +108,47 @@
 
         <div class="stat-card">
 
-            <span>
-                HORAS
-            </span>
+            <span>COMPLETADOS</span>
 
-            <strong>
-                12
-            </strong>
+            <strong id="totalCompletados">0</strong>
 
         </div>
 
 
         <div class="stat-card">
 
-            <span>
-                ZONAS
-            </span>
+            <span>HORAS APOYADAS</span>
 
-            <strong>
-                3
-            </strong>
+            <strong id="totalHoras">0</strong>
 
         </div>
 
+        <div class="stat-card">
+            <span>LUGARES APOYADOS</span>
+            <strong id="totalLugares">0</strong>
+
+        </div>
+
+    </section>
+
+    <section class="profile-section" id="organizerSection" hidden>
+        <div class="section-heading">
+            <div>
+                <span>ORGANIZACIÓN</span>
+                <h2>Mis voluntariados</h2>
+            </div>
+        </div>
+        <div class="participation-list" id="organizedList"></div>
+    </section>
+
+    <section class="profile-section">
+        <div class="section-heading">
+            <div>
+                <span>HISTORIAL</span>
+                <h2>Asistencia</h2>
+            </div>
+        </div>
+        <div class="participation-list" id="attendanceList"></div>
     </section>
 
 

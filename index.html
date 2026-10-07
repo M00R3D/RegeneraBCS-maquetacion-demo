@@ -8,6 +8,7 @@
     <title>Regenera BCS</title>
 
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="contenido.css">
 </head>
 
 <body>
@@ -109,216 +110,6 @@
     <main id="inicio">
 
         <!-- =========================
-             VOLUNTARIADOS
-        ========================== -->
-
-        <section
-            class="volunteer-section"
-            id="voluntariados"
-            data-home-listing="voluntariado"
-        >
-
-            <div class="section-heading volunteer-heading">
-
-                <div>
-
-                    <span>
-                        02 / PARTICIPA
-                    </span>
-
-                    <h2>
-                        Voluntariados
-                    </h2>
-
-                </div>
-
-                <div class="volunteer-heading-right">
-
-                    <p>
-                        Encuentra iniciativas próximas y participa en
-                        acciones que contribuyen al cuidado de Baja
-                        California Sur.
-                    </p>
-
-                    <a
-                        href="voluntariados.html"
-                        class="section-link"
-                    >
-                        Ver todos los voluntariados
-                        <span>→</span>
-                    </a>
-
-                </div>
-
-            </div>
-
-
-            <!-- TARJETAS -->
-
-            <div class="volunteer-grid">
-
-
-                <!-- VOLUNTARIADO 1 -->
-
-                <article class="volunteer-card">
-
-                    <div class="volunteer-image volunteer-image-one">
-
-                        <span class="volunteer-date">
-                            En 4 días
-                        </span>
-
-                    </div>
-
-                    <div class="volunteer-card-content">
-
-                        <span class="volunteer-category">
-                            CONSERVACIÓN COSTERA
-                        </span>
-
-                        <h3>
-                            Limpieza de playa
-                        </h3>
-
-                        <div class="volunteer-meta">
-
-                            <span>
-                                📍 La Paz
-                            </span>
-
-                            <span>
-                                👥 18 participantes
-                            </span>
-
-                        </div>
-
-                        <p>
-                            Jornada comunitaria para retirar residuos
-                            y proteger los ecosistemas costeros.
-                        </p>
-
-                        <a
-                            href="voluntariados.html"
-                            class="volunteer-link"
-                        >
-                            Ver voluntariado
-                            <span>→</span>
-                        </a>
-
-                    </div>
-
-                </article>
-
-
-                <!-- VOLUNTARIADO 2 -->
-
-                <article class="volunteer-card">
-
-                    <div class="volunteer-image volunteer-image-two">
-
-                        <span class="volunteer-date">
-                            En 8 días
-                        </span>
-
-                    </div>
-
-                    <div class="volunteer-card-content">
-
-                        <span class="volunteer-category">
-                            RESTAURACIÓN
-                        </span>
-
-                        <h3>
-                            Restauración costera
-                        </h3>
-
-                        <div class="volunteer-meta">
-
-                            <span>
-                                📍 El Mogote
-                            </span>
-
-                            <span>
-                                👥 9 participantes
-                            </span>
-
-                        </div>
-
-                        <p>
-                            Participa en actividades para recuperar
-                            espacios naturales y fortalecer su conservación.
-                        </p>
-
-                        <a
-                            href="voluntariados.html"
-                            class="volunteer-link"
-                        >
-                            Ver voluntariado
-                            <span>→</span>
-                        </a>
-
-                    </div>
-
-                </article>
-
-
-                <!-- VOLUNTARIADO 3 -->
-
-                <article class="volunteer-card">
-
-                    <div class="volunteer-image volunteer-image-three">
-
-                        <span class="volunteer-date">
-                            En 12 días
-                        </span>
-
-                    </div>
-
-                    <div class="volunteer-card-content">
-
-                        <span class="volunteer-category">
-                            BIODIVERSIDAD
-                        </span>
-
-                        <h3>
-                            Conservación de especies
-                        </h3>
-
-                        <div class="volunteer-meta">
-
-                            <span>
-                                📍 Todos Santos
-                            </span>
-
-                            <span>
-                                👥 14 participantes
-                            </span>
-
-                        </div>
-
-                        <p>
-                            Colabora en una iniciativa enfocada en
-                            proteger la biodiversidad local.
-                        </p>
-
-                        <a
-                            href="voluntariados.html"
-                            class="volunteer-link"
-                        >
-                            Ver voluntariado
-                            <span>→</span>
-                        </a>
-
-                    </div>
-
-                </article>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================
              HERO / FLORA Y FAUNA
         ========================== -->
 
@@ -375,7 +166,7 @@
                     </p>
 
                     <a
-                        href="flora.html"
+                        href="detalle.html?tipo=flora&id=ff-01"
                         class="panel-button"
                         id="floraDetailLink"
                     >
@@ -458,6 +249,33 @@
 
         </section>
 
+        <!-- =========================
+             VOLUNTARIADOS
+        ========================== -->
+
+        <section class="volunteer-section" id="voluntariados">
+
+            <div class="section-heading volunteer-heading">
+                <div>
+                    <span>02 / PARTICIPA</span>
+                    <h2>Voluntariados</h2>
+                </div>
+                <div class="volunteer-heading-right">
+                    <p>
+                        Encuentra iniciativas próximas y participa en
+                        acciones que contribuyen al cuidado de Baja
+                        California Sur.
+                    </p>
+                    <a href="voluntariados.html" class="section-link">
+                        Ver todos los voluntariados <span>→</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="volunteer-grid" data-home-listing="voluntariado"></div>
+
+        </section>
+
 
         <!-- =========================
              ARTICULOS
@@ -492,94 +310,7 @@
             </div>
 
 
-            <div class="articles-grid" data-home-listing="articulo">
-
-
-                <article class="article-card">
-
-                    <div class="article-image image-one"></div>
-
-                    <div class="article-content">
-
-                        <span>
-                            COMUNIDAD
-                        </span>
-
-                        <h3>
-                            Nuevas iniciativas para cuidar nuestras costas
-                        </h3>
-
-                        <p>
-                            Conoce proyectos locales que buscan generar
-                            un impacto positivo.
-                        </p>
-
-                        <a href="detalle.html?tipo=articulo&id=articulo-1">
-                            Leer artículo →
-                        </a>
-
-                    </div>
-
-                </article>
-
-
-                <article class="article-card">
-
-                    <div class="article-image image-two"></div>
-
-                    <div class="article-content">
-
-                        <span>
-                            NATURALEZA
-                        </span>
-
-                        <h3>
-                            Protegiendo los ecosistemas de BCS
-                        </h3>
-
-                        <p>
-                            Información y recomendaciones para visitar
-                            nuestros espacios naturales.
-                        </p>
-
-                        <a href="detalle.html?tipo=articulo&id=articulo-2">
-                            Leer artículo →
-                        </a>
-
-                    </div>
-
-                </article>
-
-
-                <article class="article-card">
-
-                    <div class="article-image image-three"></div>
-
-                    <div class="article-content">
-
-                        <span>
-                            TURISMO
-                        </span>
-
-                        <h3>
-                            ¿Qué significa viajar responsablemente?
-                        </h3>
-
-                        <p>
-                            Algunas prácticas sencillas para reducir
-                            nuestro impacto.
-                        </p>
-
-                        <a href="detalle.html?tipo=articulo&id=articulo-3">
-                            Leer artículo →
-                        </a>
-
-                    </div>
-
-                </article>
-
-
-            </div>
+            <div class="articles-grid" data-home-listing="articulo"></div>
 
         </section>
 
@@ -646,8 +377,8 @@
     </footer>
 
 
-    <script src="script.js"></script>
     <script src="contenido.js"></script>
+    <script src="script.js"></script>
 
 </body>
 

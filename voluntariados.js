@@ -1,60 +1,47 @@
 const content = window.RegeneraContent;
 const grid = document.getElementById("volunteerGrid");
-const voluntariados = content.getItems("voluntariado");
+const volunteers = content.getPublicVolunteers();
 const escapeHtml = content.escapeHtml;
 
-function categoryFilter(item) {
-    const category = String(item.categoria || item.category || "").toLowerCase();
-    if (category.includes("limpieza")) return "limpieza";
-    if (category.includes("restaur")) return "restauracion";
-    if (category.includes("conserv")) return "conservacion";
-    return category.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function categoryFilter(volunteer) {
+    return content.normalizeCategory(volunteer.categoria)
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replaceAll(" ", "-");
 }
 
-function renderVoluntariados(list = voluntariados) {
-    grid.replaceChildren();
-
-    list.forEach(voluntariado => {
-        const title = voluntariado.titulo || voluntariado.title;
-        const category = voluntariado.categoria || voluntariado.category;
-        const date = content.formatDate(voluntariado.fecha || voluntariado.date || "Fecha por confirmar");
-        const hour = content.formatTime(voluntariado.hora || voluntariado.hour || "Horario por confirmar");
-        const place = voluntariado.lugar || voluntariado.place || "Baja California Sur";
-        const participants = Number(voluntariado.inscritos ?? voluntariado.participants ?? 0);
-        const capacity = Number(voluntariado.cupo ?? voluntariado.capacity ?? 0);
-        const description = voluntariado.descripcion || voluntariado.summary || "";
-        const percentage = capacity ? Math.min(100, participants / capacity * 100) : 0;
-        const card = document.createElement("article");
-        card.className = "volunteer-card";
-        const detail = content.detailUrl("voluntariado", voluntariado.id);
-
-        card.innerHTML = `
-            <div class="volunteer-card-top">
-                <span class="volunteer-category">${escapeHtml(category)}</span>
-                <span class="volunteer-status">${capacity && participants >= capacity ? "Cupo completo" : "Inscripciones abiertas"}</span>
-            </div>
-            <h3>${escapeHtml(title)}</h3>
-            <div class="volunteer-info">
-                <span>📅 ${escapeHtml(date)}</span>
-                <span>🕐 ${escapeHtml(hour)}</span>
-                <span>📍 ${escapeHtml(place)}</span>
-            </div>
-            <p>${escapeHtml(description)}</p>
-            <div class="volunteer-capacity">
-                <div class="capacity-text">
-                    <span>Participantes</span>
-                    <strong>${participants}${capacity ? `/${capacity}` : ""}</strong>
+function renderVolunteers(list = volunteers) {
+    grid.innerHTML = list.map(volunteer => {
+        const detail = content.detailUrl("voluntariado", volunteer.voluntariados_id);
+        const fullness = volunteer.capacidad
+            ? Math.min(100, volunteer.participantes / volunteer.capacidad * 100)
+            : 0;
+        return `<article class="volunteer-card">
+            <div class="volunteer-image" style="background-image:url('${escapeHtml(volunteer.imagen)}')"></div>
+            <div class="volunteer-card-content">
+                <div class="volunteer-card-top">
+                    <span class="volunteer-category">${escapeHtml(volunteer.categoria)}</span>
+                    ${content.statusBadge(volunteer.estado)}
                 </div>
-                <div class="capacity-bar"><span style="width:${percentage}%"></span></div>
+                <h3>${escapeHtml(volunteer.titulo)}</h3>
+                <div class="volunteer-info">
+                    <span>📅 ${escapeHtml(content.formatDate(volunteer.fecha))}</span>
+                    <span>🕐 ${escapeHtml(content.formatTime(volunteer.horarioInicio))}–${escapeHtml(content.formatTime(volunteer.horarioFin))}</span>
+                    <span>📍 ${escapeHtml(volunteer.lugar?.nombre || "Lugar por confirmar")}</span>
+                    <span>👥 ${volunteer.participantes}/${escapeHtml(volunteer.capacidad)} participantes</span>
+                </div>
+                <div class="capacity-bar" aria-label="Ocupación del cupo"><span style="width:${fullness}%"></span></div>
+                <p>${escapeHtml(volunteer.descripcion)}</p>
+                <a class="volunteer-button" href="${detail}">Ver voluntariado →</a>
             </div>
-            <a class="volunteer-button" href="${detail}">Ver voluntariado →</a>
-        `;
+        </article>`;
+    }).join("") || '<p class="empty-state">No hay voluntariados publicados con este filtro.</p>';
 
+    grid.querySelectorAll(".volunteer-card").forEach(card => {
+        const link = card.querySelector("a");
         card.addEventListener("click", event => {
-            if (event.target.closest("a, button")) return;
-            window.location.href = detail;
+            if (!event.target.closest("a, button")) window.location.href = link.href;
         });
-        grid.appendChild(card);
     });
 }
 
@@ -62,14 +49,11 @@ document.querySelectorAll(".filter").forEach(button => {
     button.addEventListener("click", () => {
         document.querySelectorAll(".filter").forEach(filter => filter.classList.remove("active"));
         button.classList.add("active");
-
         const category = button.dataset.filter;
-        renderVoluntariados(
-            category === "todos"
-                ? voluntariados
-                : voluntariados.filter(item => categoryFilter(item) === category)
-        );
+        renderVolunteers(category === "todos"
+            ? volunteers
+            : volunteers.filter(volunteer => categoryFilter(volunteer) === category));
     });
 });
 
-renderVoluntariados();
+renderVolunteers();

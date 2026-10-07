@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard · Regenera BCS</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pages.css">
+    <link rel="stylesheet" href="contenido.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+    <aside class="admin-sidebar">
+        <a class="logo admin-logo" href="index.html">
+            <span class="logo-mark"><img src="path1521.png" alt=""></span>
+            <span>Regenera<span>BCS</span></span>
+        </a>
+        <p class="sidebar-label">ADMINISTRACIÓN</p>
+        <nav id="adminTabs" class="admin-tabs" aria-label="Secciones del dashboard">
+            <button class="active" data-tab="dashboard">◫ Dashboard</button>
+            <button data-tab="voluntariados">♧ Voluntariados</button>
+            <button data-tab="articulos">▤ Artículos</button>
+            <button data-tab="usuarios">♙ Usuarios</button>
+            <button data-tab="lugares">⌖ Lugares</button>
+            <button data-tab="flora">✿ Flora y fauna</button>
+            <button data-tab="notificaciones">♧ Notificaciones</button>
+            <button data-tab="auditoria">▧ Auditoría</button>
+        </nav>
+        <a class="admin-back-link" href="index.html">← Volver al sitio</a>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-header">
+            <div>
+                <span class="page-label">PANEL DE CONTROL</span>
+                <h1 id="adminGreeting">Dashboard</h1>
+            </div>
+            <div class="admin-header-actions">
+                <span id="adminUserName"></span>
+                <button id="adminNotificationIndicator" type="button" class="secondary-button" aria-label="Abrir notificaciones">Notificaciones</button>
+                <button id="adminLogout" type="button" class="secondary-button">Cerrar sesión</button>
+            </div>
+        </header>
+        <div class="admin-message" id="adminMessage" role="status" aria-live="polite"></div>
+
+        <section class="admin-section active" data-section="dashboard">
+            <div class="admin-stats" id="adminStats"></div>
+            <div class="admin-dashboard-grid">
+                <article class="admin-panel">
+                    <div class="admin-panel-heading"><div><span>REVISIÓN</span><h2>Contenido pendiente</h2></div></div>
+                    <div id="pendingSummary"></div>
+                </article>
+                <article class="admin-panel">
+                    <div class="admin-panel-heading"><div><span>ACTIVIDAD</span><h2>Auditoría reciente</h2></div></div>
+                    <div id="recentAudit"></div>
+                </article>
+            </div>
+        </section>
+
+        <section class="admin-section" data-section="voluntariados">
+            <div class="admin-section-heading">
+                <div><span>GESTIÓN DE CONTENIDO</span><h2>Voluntariados</h2></div>
+                <select id="volunteerStateFilter" aria-label="Filtrar voluntariados por estado">
+                    <option value="todos">Todos los estados</option><option>pendiente</option><option>publicado</option><option>cancelado</option><option>finalizado</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap" id="volunteerTable"></div>
+        </section>
+
+        <section class="admin-section" data-section="articulos">
+            <div class="admin-section-heading">
+                <div><span>GESTIÓN DE CONTENIDO</span><h2>Artículos</h2></div>
+                <select id="articleStateFilter" aria-label="Filtrar artículos por estado">
+                    <option value="todos">Todos los estados</option><option>pendiente</option><option>publicado</option><option>rechazado</option>
+                </select>
+            </div>
+            <div class="admin-table-wrap" id="articleTable"></div>
+        </section>
+
+        <section class="admin-section" data-section="usuarios">
+            <div class="admin-section-heading"><div><span>CUENTAS Y PERMISOS</span><h2>Usuarios</h2></div></div>
+            <div class="admin-table-wrap" id="userTable"></div>
+        </section>
+
+        <section class="admin-section" data-section="lugares">
+            <div class="admin-section-heading"><div><span>CATÁLOGO</span><h2>Lugares</h2></div></div>
+            <form id="placeForm" class="admin-inline-form">
+                <input type="hidden" name="id">
+                <label>Nombre<input name="nombre" required maxlength="100"></label>
+                <label>Dirección<input name="direccion" required maxlength="200"></label>
+                <label>Latitud<input name="latitud" type="number" step="any"></label>
+                <label>Longitud<input name="longitud" type="number" step="any"></label>
+                <button type="submit">Guardar lugar</button>
+                <button type="reset" class="secondary-button">Limpiar</button>
+            </form>
+            <div class="admin-table-wrap" id="placeTable"></div>
+        </section>
+
+        <section class="admin-section" data-section="flora">
+            <div class="admin-section-heading"><div><span>CATÁLOGO</span><h2>Flora y fauna</h2></div></div>
+            <form id="speciesForm" class="admin-inline-form">
+                <input type="hidden" name="id">
+                <label>Nombre<input name="nombre" required maxlength="100"></label>
+                <label>Nombre científico<input name="nombreCientifico" maxlength="100"></label>
+                <label>Tipo<select name="tipo"><option value="flora">Flora</option><option value="fauna">Fauna</option></select></label>
+                <label>Hábitat<input name="habitat" maxlength="200"></label>
+                <label>Conservación<input name="estadoConservacion" maxlength="100"></label>
+                <label>Ubicación<input name="ubicacion" maxlength="150"></label>
+                <label class="wide-field">Descripción<textarea name="descripcion" rows="2" required maxlength="1000"></textarea></label>
+                <button type="submit">Guardar especie</button>
+                <button type="reset" class="secondary-button">Limpiar</button>
+            </form>
+            <div class="admin-table-wrap" id="speciesTable"></div>
+        </section>
+
+        <section class="admin-section" data-section="notificaciones">
+            <div class="admin-section-heading"><div><span>MENSAJERÍA</span><h2>Notificaciones</h2></div></div>
+            <div id="adminNotifications" class="admin-notification-list"></div>
+        </section>
+
+        <section class="admin-section" data-section="auditoria">
+            <div class="admin-section-heading"><div><span>TRAZABILIDAD</span><h2>Auditoría</h2></div></div>
+            <div class="admin-table-wrap" id="auditTable"></div>
+        </section>
+    </main>
+    <script src="contenido.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
