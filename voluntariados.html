@@ -139,6 +139,27 @@
 
         </div>
 
+        <div class="volunteer-filter-fields" aria-label="Filtros de voluntariados">
+            <label>
+                Buscar
+                <input id="volunteerSearch" type="search" placeholder="Título, descripción o categoría">
+            </label>
+            <label>
+                Fecha
+                <input id="volunteerDateFilter" type="date">
+            </label>
+            <label>
+                Lugar
+                <select id="volunteerPlaceFilter">
+                    <option value="">Todos los lugares</option>
+                </select>
+            </label>
+            <label class="availability-filter">
+                <input id="volunteerAvailabilityFilter" type="checkbox">
+                Solo actividades con cupo
+            </label>
+        </div>
+
 
         <div class="volunteer-grid" id="volunteerGrid" data-content-listing="voluntariado">
 

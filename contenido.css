@@ -65,6 +65,7 @@
 }
 
 .status-cancelado,
+.status-cancelada,
 .status-rechazado,
 .status-urgente {
     background: #f9e5e1;

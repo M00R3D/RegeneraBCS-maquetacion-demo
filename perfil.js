@@ -25,7 +25,7 @@ if (!user) {
     function renderProfile() {
         const impact = content.getUserImpact(user.usuario_id);
         const enrollments = content.getCollection("inscripciones").filter(row =>
-            row.usuario_id === user.usuario_id && ["activa", "completada"].includes(row.estado));
+            row.usuario_id === user.usuario_id && ["activa", "completada", "cancelada"].includes(row.estado));
         const volunteers = content.getCollection("voluntariados");
         const assistances = content.getCollection("asistencias").filter(row =>
             row.usuario_id === user.usuario_id && row.confirmada);
@@ -65,7 +65,9 @@ if (!user) {
                             <label for="profile-code-${escapeHtml(volunteer.voluntariados_id)}">Código de asistencia</label>
                             <div><input id="profile-code-${escapeHtml(volunteer.voluntariados_id)}" name="codigo" placeholder="${availableCode ? "REGENERA-XXXXXX" : "Aún no hay código"}" autocomplete="one-time-code" required ${availableCode ? "" : "disabled"}>
                             <button type="submit" ${availableCode ? "" : "disabled"}>Registrar asistencia</button></div>
-                        </form>`
+                        </form><button class="secondary-button cancel-enrollment-button" type="button" data-cancel-enrollment="${escapeHtml(volunteer.voluntariados_id)}">Cancelar inscripción</button>`
+                        : enrollment.estado === "cancelada"
+                            ? '<p class="enrollment-cancelled">Inscripción cancelada · Registro conservado en el historial</p>'
                         : "";
                 return `<article class="participation-item">
                     <div>${content.statusBadge(enrollment.estado)}<h3>${escapeHtml(volunteer.titulo)}</h3>
@@ -116,6 +118,15 @@ if (!user) {
         event.preventDefault();
         const result = content.registerAttendance(form.dataset.volunteerId, new FormData(form).get("codigo"));
         profileMessage.textContent = result.ok ? "¡Asistencia registrada! Tus puntos y medallas se actualizaron." : result.message;
+        profileMessage.className = `profile-action-message ${result.ok ? "is-success" : "is-error"}`;
+        if (result.ok) renderProfile();
+    });
+
+    profileRoot.addEventListener("click", event => {
+        const button = event.target.closest("[data-cancel-enrollment]");
+        if (!button || !window.confirm("¿Cancelar tu inscripción? El registro se conservará en tu historial.")) return;
+        const result = content.cancelVolunteerEnrollment(button.dataset.cancelEnrollment);
+        profileMessage.textContent = result.ok ? "Tu inscripción fue cancelada." : result.message;
         profileMessage.className = `profile-action-message ${result.ok ? "is-success" : "is-error"}`;
         if (result.ok) renderProfile();
     });

@@ -946,8 +946,13 @@
         return volunteer ? getById("lugares", volunteer.lugar_id) : null;
     }
 
+    function hasVolunteerStarted(volunteer) {
+        const start = new Date(`${volunteer?.fecha || ""}T${volunteer?.horarioInicio || ""}`);
+        return Number.isNaN(start.getTime()) || start <= new Date();
+    }
+
     function getPublicVolunteers() {
-        return getCollection("voluntariados").filter(item => item.estado === "publicado").map(item => {
+        return getCollection("voluntariados").filter(item => item.estado === "publicado" && !hasVolunteerStarted(item)).map(item => {
             const place = getPlace(item);
             const organizer = getById("usuarios", item.organizador_id);
             const participants = getCollection("inscripciones").filter(row => row.voluntariado_id === item.voluntariados_id && ["activa", "completada"].includes(row.estado)).length;
@@ -975,6 +980,7 @@
         if (!user) return { ok: false, reason: "login", message: "Inicia sesión para inscribirte." };
         const volunteer = getById("voluntariados", volunteerId);
         if (!volunteer || volunteer.estado !== "publicado") return { ok: false, message: "Este voluntariado no está disponible." };
+        if (hasVolunteerStarted(volunteer)) return { ok: false, reason: "started", message: "La actividad ya comenzó o su fecha no es válida; no admite inscripciones." };
         const inscriptions = getCollection("inscripciones");
         const existing = inscriptions.find(row => row.usuario_id === user.usuario_id && row.voluntariado_id === volunteerId && ["activa", "completada"].includes(row.estado));
         if (existing) return { ok: false, reason: "duplicate", message: "Ya estás inscrito." };
@@ -986,6 +992,25 @@
         addNotification(user.usuario_id, "inscripcion", "Inscripción confirmada", `Te inscribiste en "${volunteer.titulo}".`, { tipo: "voluntariado", id: volunteerId });
         audit(user.usuario_id, "USUARIO_INSCRIPCION_VOLUNTARIADO", "voluntariados", volunteerId, `Inscripción ${inscription.inscripciones_id}.`);
         awardPoints(user.usuario_id, 10, "Inscripción a un voluntariado", "inscripciones", inscription.inscripciones_id);
+        return { ok: true, inscription };
+    }
+
+    function cancelVolunteerEnrollment(volunteerId) {
+        const user = getCurrentUser();
+        if (!user) return { ok: false, reason: "login", message: "Inicia sesión para cancelar tu inscripción." };
+        const volunteer = getById("voluntariados", volunteerId);
+        if (!volunteer || volunteer.estado !== "publicado") return { ok: false, message: "Este voluntariado ya no admite cambios de inscripción." };
+        const inscriptions = getCollection("inscripciones");
+        const inscription = inscriptions.find(row => row.usuario_id === user.usuario_id && row.voluntariado_id === volunteerId && row.estado === "activa");
+        if (!inscription) return { ok: false, message: "No tienes una inscripción activa para cancelar." };
+        if (getCollection("asistencias").some(row => row.usuario_id === user.usuario_id && row.voluntariado_id === volunteerId && row.confirmada)) {
+            return { ok: false, message: "No se puede cancelar una inscripción con asistencia confirmada." };
+        }
+        inscription.estado = "cancelada";
+        inscription.fechaCancelacion = new Date().toISOString();
+        saveCollection("inscripciones", inscriptions);
+        addNotification(user.usuario_id, "inscripcion", "Inscripción cancelada", `Cancelaste tu lugar en "${volunteer.titulo}".`, { tipo: "voluntariado", id: volunteerId });
+        audit(user.usuario_id, "USUARIO_CANCELO_INSCRIPCION", "voluntariados", volunteerId, `Inscripción ${inscription.inscripciones_id} cancelada.`);
         return { ok: true, inscription };
     }
 
@@ -1263,6 +1288,7 @@
         const place = isVolunteer ? getPlace(item) : null;
         const inscriptions = isVolunteer ? getCollection("inscripciones").filter(row => row.voluntariado_id === id && ["activa", "completada"].includes(row.estado)) : [];
         const mine = isVolunteer && user ? inscriptions.some(row => row.usuario_id === user.usuario_id && ["activa", "completada"].includes(row.estado)) : false;
+        const myActiveEnrollment = isVolunteer && user ? inscriptions.find(row => row.usuario_id === user.usuario_id && row.estado === "activa") : null;
         const count = inscriptions.length;
         const full = Number(item.capacidad) > 0 && count >= Number(item.capacidad);
         const hasAttendance = Boolean(isVolunteer && user && getCollection("asistencias").some(row => row.usuario_id === user.usuario_id && row.voluntariado_id === id && row.confirmada));
@@ -1289,11 +1315,13 @@
             </dl>` : isFlora ? `
             <div class="detail-meta"><span>${escapeHtml(item.tipo)}</span><span>${escapeHtml(item.estadoConservacion)}</span><span>${escapeHtml(item.ubicacion)}</span></div>
             <dl class="detail-facts"><div><dt>Nombre científico</dt><dd>${escapeHtml(item.nombreCientifico)}</dd></div><div><dt>Hábitat</dt><dd>${escapeHtml(item.habitat)}</dd></div></dl>` : "";
-        const canJoin = isVolunteer && item.estado === "publicado";
-        const participates = canJoin && !hasAttendance ? `<div class="participation-actions">
+        const canJoin = isVolunteer && item.estado === "publicado" && !hasVolunteerStarted(item);
+        const registrationClosed = isVolunteer && item.estado === "publicado" && hasVolunteerStarted(item) && !mine;
+        const participates = isVolunteer && item.estado === "publicado" && !hasAttendance && canJoin ? `<div class="participation-actions">
             <button class="detail-action" id="participateButton" type="button" ${mine || full ? "disabled" : ""}>${mine ? "Ya estás inscrito" : full ? "Cupo lleno" : "Inscribirme"}</button>
+            ${myActiveEnrollment ? '<button class="detail-action secondary-button" id="cancelEnrollmentButton" type="button">Cancelar inscripción</button>' : ""}
             <p class="form-message ${mine ? "is-success" : full ? "is-error" : ""}" id="participationMessage" role="status" aria-live="polite">${mine ? "Ya tienes una inscripción para este voluntariado." : full ? "Cupo lleno." : ""}</p>
-        </div>` : "";
+        </div>` : registrationClosed ? '<p class="form-message is-error">La inscripción está cerrada: la actividad ya comenzó o su fecha no es válida.</p>' : "";
         const userAttendance = isVolunteer && user && mine && !hasAttendance
             ? `<form class="attendance-code-form" id="attendanceCodeForm" data-volunteer-id="${escapeHtml(id)}">
                 <label for="attendanceCodeInput">Ingresa el código de asistencia</label>
@@ -1375,6 +1403,14 @@
             message.className = `form-message ${result.ok ? "is-success" : "is-error"}`;
             document.getElementById("participateButton").textContent = result.ok || result.reason === "duplicate" ? "Ya estás inscrito" : "Inscribirme";
             document.getElementById("participateButton").disabled = result.ok || result.reason === "duplicate" || result.reason === "full";
+            if (result.ok) renderDetailPage();
+        });
+        document.getElementById("cancelEnrollmentButton")?.addEventListener("click", () => {
+            if (!window.confirm("¿Cancelar tu inscripción? El registro se conservará en tu historial.")) return;
+            const result = cancelVolunteerEnrollment(id);
+            const message = document.getElementById("participationMessage");
+            message.textContent = result.message || (result.ok ? "Tu inscripción fue cancelada." : "No se pudo cancelar la inscripción.");
+            message.className = `form-message ${result.ok ? "is-success" : "is-error"}`;
             if (result.ok) renderDetailPage();
         });
         target.querySelectorAll("[data-attendance-user]").forEach(button => {
@@ -1520,6 +1556,7 @@
         getPublicFlora,
         getVolunteerParticipants,
         joinVolunteer,
+        cancelVolunteerEnrollment,
         markAttendance,
         registerAttendance,
         generateAttendanceCode,

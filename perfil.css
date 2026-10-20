@@ -114,6 +114,16 @@
     line-height: 1.7;
 }
 
+.cancel-enrollment-button {
+    margin-top: 12px;
+}
+
+.enrollment-cancelled {
+    margin-top: 10px;
+    color: #805e12;
+    font-size: 13px;
+}
+
 .participation-item > strong {
     color: var(--green);
 }
