@@ -108,6 +108,8 @@
                     <option value="flora">Flora</option>
                     <option value="fauna">Fauna</option>
                 </select>
+                <label for="floraSearch">Buscar especie o hábitat</label>
+                <input id="floraSearch" type="search" placeholder="Nombre común, científico o hábitat">
             </div>
 
             <div class="page-grid" data-content-listing="flora">
@@ -268,9 +270,11 @@
 
     <script src="contenido.js"></script>
     <script>
-        document.getElementById("floraFilter").addEventListener("change", () => {
+        const refreshFlora = () => {
             window.RegeneraContent.renderFloraListing();
-        });
+        };
+        document.getElementById("floraFilter").addEventListener("change", refreshFlora);
+        document.getElementById("floraSearch").addEventListener("input", refreshFlora);
     </script>
 </body>
 </html>

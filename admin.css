@@ -94,12 +94,153 @@
     font-size: 13px;
 }
 
+.admin-create-link {
+    padding: 9px 12px;
+    border: 1px solid rgba(22, 79, 61, .2);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.admin-actions button[data-tooltip],
+.admin-table-pagination button[data-tooltip] {
+    position: relative;
+}
+
+.admin-actions button[data-tooltip]::after,
+.admin-table-pagination button[data-tooltip]::after {
+    position: absolute;
+    z-index: 30;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    width: max-content;
+    max-width: 220px;
+    padding: 7px 9px;
+    border-radius: 4px;
+    background: #14201b;
+    color: white;
+    content: attr(data-tooltip);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.4;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-50%);
+    transition: opacity .15s ease 1s, visibility 0s linear 1s;
+}
+
+.admin-actions button[data-tooltip]:hover::after,
+.admin-actions button[data-tooltip]:focus-visible::after,
+.admin-table-pagination button[data-tooltip]:hover::after,
+.admin-table-pagination button[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+@media (hover: none) {
+    .admin-actions button[data-tooltip]:active::after,
+    .admin-table-pagination button[data-tooltip]:active::after {
+        opacity: 1;
+        visibility: visible;
+        transition-delay: 0s;
+    }
+}
+
+.admin-view-switch {
+    display: inline-flex;
+    flex: 0 0 auto;
+    padding: 4px;
+    border: 1px solid rgba(20, 32, 27, .12);
+    border-radius: 7px;
+    background: white;
+}
+
+.admin-view-switch a {
+    padding: 9px 12px;
+    color: var(--gray);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.admin-view-switch a[aria-current="page"] {
+    background: var(--green);
+    color: white;
+}
+
 .admin-section {
     display: none;
 }
 
 .admin-section.active {
     display: block;
+}
+
+.admin-search {
+    display: grid;
+    max-width: 420px;
+    gap: 6px;
+    margin: 0 0 14px;
+    color: var(--gray);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.admin-search input {
+    min-height: 40px;
+    padding: 8px 11px;
+    border: 1px solid rgba(20, 32, 27, .15);
+    border-radius: 6px;
+    background: white;
+    color: var(--black);
+    font: inherit;
+    font-weight: 400;
+}
+
+.admin-form-disclosure {
+    margin: 0 0 20px;
+    border: 1px solid rgba(20, 32, 27, .12);
+    background: rgba(255, 255, 255, .65);
+}
+
+.admin-form-disclosure > summary {
+    padding: 13px 16px;
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.admin-form-disclosure[open] > summary {
+    border-bottom: 1px solid rgba(20, 32, 27, .1);
+}
+
+.admin-table-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 12px;
+    border-top: 1px solid rgba(20, 32, 27, .08);
+    color: var(--gray);
+    font-size: 12px;
+}
+
+.admin-table-pagination button {
+    padding: 7px 10px;
+    border: 1px solid rgba(20, 32, 27, .14);
+    border-radius: 5px;
+    background: white;
+    color: var(--green);
+    cursor: pointer;
+}
+
+.admin-table-pagination button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
 }
 
 .admin-stats {

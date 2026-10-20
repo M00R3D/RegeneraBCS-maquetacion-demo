@@ -35,7 +35,7 @@ function renderVolunteers(list) {
                 <h3>${escapeHtml(volunteer.titulo)}</h3>
                 <div class="volunteer-info">
                     <span>📅 ${escapeHtml(content.formatDate(volunteer.fecha))}</span>
-                    <span>🕐 ${escapeHtml(content.formatTime(volunteer.horarioInicio))}–${escapeHtml(content.formatTime(volunteer.horarioFin))}</span>
+                    <span>🕐 ${escapeHtml(content.formatTime(volunteer.horarioInicio))}–${escapeHtml(content.formatTime(volunteer.horarioFin))}${content.formatVolunteerDuration(volunteer) ? ` · ${escapeHtml(content.formatVolunteerDuration(volunteer))}` : ""}</span>
                     <span>📍 ${escapeHtml(volunteer.lugar?.nombre || "Lugar por confirmar")}</span>
                     <span>👥 ${volunteer.participantes}/${escapeHtml(volunteer.capacidad)} participantes</span>
                 </div>

@@ -15,6 +15,17 @@ if (!user) {
         ? user.organizadorVerificado ? "Organizador verificado" : "Organizador · pendiente de verificación"
         : user.rol === "administrador" ? "Administración Regenera" : "Participante ambiental";
     document.getElementById("profileJoined").textContent = `Miembro desde ${content.formatDate(user.fechaRegistro)}`;
+    const organizerRequestPanel = document.getElementById("organizerRequestPanel");
+    if (user.rol === "usuario" && !user.organizadorVerificado) {
+        organizerRequestPanel.hidden = false;
+        const requestState = user.solicitudOrganizadorEstado || "sin solicitar";
+        document.getElementById("organizerRequestStatus").textContent = requestState === "pendiente"
+            ? "Tu solicitud está pendiente de revisión."
+            : requestState === "rechazada" ? "Tu solicitud anterior no fue aprobada; puedes volver a solicitarla." : "Solicita la revisión de tu cuenta si deseas organizar voluntariados.";
+        const requestButton = document.getElementById("requestOrganizerVerification");
+        requestButton.disabled = requestState === "pendiente";
+        requestButton.textContent = requestState === "pendiente" ? "Solicitud pendiente" : "Solicitar verificación";
+    }
     if (user.foto && /^https?:\/\//i.test(user.foto)) {
         photo.src = user.foto;
     } else {
@@ -29,8 +40,7 @@ if (!user) {
         const volunteers = content.getCollection("voluntariados");
         const assistances = content.getCollection("asistencias").filter(row =>
             row.usuario_id === user.usuario_id && row.confirmada);
-        const articles = content.getCollection("articulos").filter(row =>
-            row.autor_id === user.usuario_id && row.estado === "publicado");
+        const articles = content.getCollection("articulos").filter(row => row.autor_id === user.usuario_id);
 
         document.getElementById("totalCompletados").textContent = impact.voluntariados;
         document.getElementById("impactAssistance").textContent = impact.asistencias;
@@ -44,10 +54,9 @@ if (!user) {
             ? content.renderAchievementCard(impact.nextAchievement)
             : '<div class="empty-state"><p>Desbloqueaste todas las medallas disponibles. Gracias por regenerar BCS.</p></div>';
 
-        const earned = impact.achievements.filter(item => item.unlocked);
-        document.getElementById("earnedMedals").innerHTML = earned.length
-            ? earned.slice(0, 4).map(content.renderAchievementCard).join("")
-            : '<div class="empty-state"><p>Tus medallas aparecerán aquí a medida que participes.</p></div>';
+        document.getElementById("earnedMedals").innerHTML = impact.achievements.length
+            ? impact.achievements.map(content.renderAchievementCard).join("")
+            : '<div class="empty-state"><p>Los reconocimientos aparecerán aquí cuando estén disponibles.</p></div>';
 
         const visibleEnrollments = enrollments.filter(enrollment =>
             volunteers.some(volunteer => volunteer.voluntariados_id === enrollment.voluntariado_id));
@@ -63,7 +72,8 @@ if (!user) {
                     : enrollment.estado === "activa"
                         ? `<form class="profile-code-form" data-volunteer-id="${escapeHtml(volunteer.voluntariados_id)}">
                             <label for="profile-code-${escapeHtml(volunteer.voluntariados_id)}">Código de asistencia</label>
-                            <div><input id="profile-code-${escapeHtml(volunteer.voluntariados_id)}" name="codigo" placeholder="${availableCode ? "REGENERA-XXXXXX" : "Aún no hay código"}" autocomplete="one-time-code" required ${availableCode ? "" : "disabled"}>
+                            <p>Introduce el código que te proporcione el organizador. El escaneo QR no está disponible en esta demo.</p>
+                            <div><input id="profile-code-${escapeHtml(volunteer.voluntariados_id)}" name="codigo" placeholder="${availableCode ? "Código proporcionado por el organizador" : "El organizador aún no ha generado un código"}" autocomplete="one-time-code" required ${availableCode ? "" : "disabled"}>
                             <button type="submit" ${availableCode ? "" : "disabled"}>Registrar asistencia</button></div>
                         </form><button class="secondary-button cancel-enrollment-button" type="button" data-cancel-enrollment="${escapeHtml(volunteer.voluntariados_id)}">Cancelar inscripción</button>`
                         : enrollment.estado === "cancelada"
@@ -92,23 +102,23 @@ if (!user) {
 
         document.getElementById("publishedArticles").innerHTML = articles.length
             ? articles.map(article => `<article class="participation-item">
-                <div>${content.statusBadge("publicado")}<h3>${escapeHtml(article.titulo)}</h3>
-                    <p>${escapeHtml(article.categoria)} · ${escapeHtml(content.formatDate(article.fechaPublicacion))}</p></div>
+                <div>${content.statusBadge(article.estado)}<h3>${escapeHtml(article.titulo)}</h3>
+                    <p>${escapeHtml(article.categoria)} · ${escapeHtml(content.formatDate(article.fechaPublicacion || article.fechaActualizacion))}</p></div>
                 <a href="${content.detailUrl("articulo", article.articulos_id)}">Leer →</a>
             </article>`).join("")
-            : '<div class="empty-state"><p>Tus artículos aprobados aparecerán aquí.</p><a href="crear-contenido.html?tipo=articulo">Crear un artículo →</a></div>';
+            : '<div class="empty-state"><p>Tus artículos y propuestas aparecerán aquí.</p><a href="crear-contenido.html?tipo=articulo">Crear un artículo →</a></div>';
 
         const organizerSection = document.getElementById("organizerSection");
-        if (user.rol === "organizador" || user.rol === "administrador") {
-            organizerSection.hidden = false;
-            const organized = volunteers.filter(volunteer => volunteer.organizador_id === user.usuario_id);
+        const organized = volunteers.filter(volunteer => volunteer.organizador_id === user.usuario_id);
+        organizerSection.hidden = !organized.length && user.rol !== "organizador" && user.rol !== "administrador";
+        if (!organizerSection.hidden) {
             document.getElementById("organizedList").innerHTML = organized.length
                 ? organized.map(volunteer => `<article class="participation-item">
                     <div>${content.statusBadge(volunteer.estado)}<h3>${escapeHtml(volunteer.titulo)}</h3>
                     <p>${content.getVolunteerParticipants(volunteer.voluntariados_id).length} participantes · ${escapeHtml(content.formatDate(volunteer.fecha))}</p></div>
                     <a href="${content.detailUrl("voluntariado", volunteer.voluntariados_id)}">Control de asistencia →</a>
                 </article>`).join("")
-                : '<div class="empty-state"><p>Aún no has creado voluntariados.</p><a href="crear-contenido.html?tipo=voluntariado">Crear voluntariado →</a></div>';
+                : '<div class="empty-state"><p>Aún no has creado voluntariados.</p><a href="crear-contenido.html?tipo=voluntariado">Proponer voluntariado →</a></div>';
         }
     }
 
@@ -123,6 +133,18 @@ if (!user) {
     });
 
     profileRoot.addEventListener("click", event => {
+        if (event.target.closest("#requestOrganizerVerification")) {
+            const result = content.requestOrganizerVerification();
+            profileMessage.textContent = result.message;
+            profileMessage.className = `profile-action-message ${result.ok ? "is-success" : "is-error"}`;
+            if (result.ok) {
+                document.getElementById("organizerRequestStatus").textContent = "Tu solicitud está pendiente de revisión.";
+                const requestButton = document.getElementById("requestOrganizerVerification");
+                requestButton.disabled = true;
+                requestButton.textContent = "Solicitud pendiente";
+            }
+            return;
+        }
         const button = event.target.closest("[data-cancel-enrollment]");
         if (!button || !window.confirm("¿Cancelar tu inscripción? El registro se conservará en tu historial.")) return;
         const result = content.cancelVolunteerEnrollment(button.dataset.cancelEnrollment);

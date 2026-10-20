@@ -175,6 +175,54 @@ button {
     cursor: pointer;
 }
 
+main#inicio {
+    display: flex;
+    flex-direction: column;
+}
+
+#inicio > .intro { order: 0; }
+#inicio > .volunteer-section { order: 1; }
+#inicio > .hero { order: 2; }
+#inicio > .articles-section { order: 3; }
+#inicio > .report-section { order: 4; }
+
+.home-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    margin-top: 28px;
+}
+
+.home-primary-link,
+.home-secondary-link {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 18px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.home-primary-link {
+    background: var(--green);
+    color: var(--white);
+}
+
+.home-secondary-link {
+    border: 1px solid rgba(22, 79, 61, .24);
+    color: var(--green);
+}
+
+.report-unavailable {
+    max-width: 330px;
+    color: rgba(255, 255, 255, .76);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
 /* =========================
    MOBILE MENU
 ========================= */

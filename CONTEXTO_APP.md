@@ -128,3 +128,30 @@ Secciones que se ven como parte del producto pero no están conectadas a una fun
 ## Notas de capturas pendientes
 
 Las notas descritas por la persona usuaria no aparecen en los archivos encontrados dentro del proyecto. Este contexto se basa en la implementación y el contenido del repositorio; agregar aquí las observaciones de las capturas permitirá distinguir con precisión el diseño observado, los textos visibles y cualquier diferencia entre la pantalla y el comportamiento implementado.
+
+## Avance Fase 2 del frontend
+
+La demo sigue siendo independiente y no realiza peticiones HTTP. Las mejoras implementadas se guardan únicamente en `localStorage`:
+
+- La portada presenta primero introducción y voluntariado próximo; el carrusel de especies aparece debajo. El bloque de reportes informa que aún no está disponible.
+- La navegación compartida agrega menús móviles en páginas públicas, conserva el acceso al perfil con sesión y evita ofrecer “Crear contenido” o medallas como opciones principales.
+- El catálogo de voluntariados busca por texto, fecha y lugar, filtra por categoría y cupo, ordena por fecha futura y muestra duración calculada. Las inscripciones se pueden cancelar conservando el registro; las actividades pasadas no aceptan nuevas inscripciones.
+- El detalle de especie muestra cuatro etapas y marca explícitamente como demo los estados sin fuente. Las fichas se pueden desactivar sin borrarlas. El administrador puede editar campos educativos y fuentes locales.
+- Artículos tiene una tarjeta `+`; sus tarjetas abren el artículo relacionado. Autores pueden editar sus propios artículos y el contenido publicado vuelve a revisión al ser editado.
+- Perfil muestra propuestas propias, estados de artículos, historial y todas las medallas. La ruta antigua de medallas redirige al perfil. Existe solicitud local de verificación de organizador, con decisión administrativa auditada y separada del rol.
+- Propietarios pueden editar sus actividades y gestionar la asistencia de las que están publicadas o finalizadas. Administración puede crear contenido y elegir si queda pendiente o se publica directamente.
+- Usuarios pueden solicitar localmente verificación de organizador; administración puede aprobar/rechazar la solicitud, guardar responsable y fecha, y mantener el rol separado. La edición de artículos/voluntariados está enlazada desde sus detalles y guarda los cambios en la misma colección local.
+- El formulario de lugares admite tipo, descripción, conservación, fuente y coordenadas validadas; el formulario de especies admite función ecológica, dato curioso, amenazas, recomendaciones y fuentes manuales.
+- Los códigos de asistencia vencen en siete días; la fecha no es editable. La entrada manual está identificada como tal; no hay escáner QR real.
+- El dashboard muestra métricas derivadas de registros locales, búsqueda/paginación en tablas, formularios de lugares y especies contraíbles, decisiones distintas de revisión y desactivación lógica de lugares/especies. El perfil del administrador permanece accesible.
+
+Se probaron manualmente en Playwright navegación pública, filtros, inscripción/cancelación, edición, revisión, solicitudes de organizador, creación directa administrativa y vistas móviles. Se restauraron los datos locales originales después de las pruebas. No hay una suite automatizada del frontend configurada.
+
+### Límites pendientes
+
+- La sesión, roles, notificaciones, auditoría, recompensas y permisos son simulaciones manipulables del navegador; el frontend actual conserva contraseñas demo en texto plano en `localStorage` y no es seguridad de producción.
+- No se implementaron escaneo QR, correo, mapas, carga de archivos ni almacenamiento remoto de imágenes. Las imágenes se ingresan como URL y el QR local no valida asistencia de forma segura.
+- No existe todavía un estado de ausencia distinto de asistencia confirmada, ni campo de comentario para devolver una propuesta. La edición de artículos usa un textarea de texto plano; no es un editor estructurado.
+- El panel permite cambiar roles y verificación, pero no crear cuentas administrativas desde una interfaz dedicada, porque no existe un mecanismo de credenciales seguro en el frontend.
+- Los reportes siguen sin flujo funcional. `actividades.html` permanece como página informativa.
+- La verificación de información de flora/fauna depende de fuentes que el administrador agregue; los datos semilla y sus etiquetas no se deben presentar como validación científica.

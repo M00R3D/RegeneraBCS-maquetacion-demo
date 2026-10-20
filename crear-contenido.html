@@ -43,6 +43,14 @@
                     <option value="educación ambiental">Educación ambiental</option>
                 </select>
 
+                <div id="adminPublicationField" hidden>
+                    <label for="initialState">Estado inicial</label>
+                    <select id="initialState" name="estadoInicial">
+                        <option value="pendiente">Enviar a revisión</option>
+                        <option value="publicado">Publicar directamente</option>
+                    </select>
+                </div>
+
                 <div data-field-group="voluntariado" hidden>
                     <label for="date">Fecha</label>
                     <input id="date" name="date" type="date" required>
@@ -62,8 +70,10 @@
                     <textarea id="materials" name="materials" rows="2" maxlength="1000"></textarea>
                 </div>
 
-                <label for="summary">Descripción breve</label>
-                <textarea id="summary" name="summary" rows="3" maxlength="300" required></textarea>
+                <div data-field-group="voluntariado" hidden>
+                    <label for="summary">Descripción breve</label>
+                    <textarea id="summary" name="summary" rows="3" maxlength="300" required></textarea>
+                </div>
 
                 <label for="content">Información completa</label>
                 <textarea id="content" name="content" rows="8" maxlength="10000" required></textarea>

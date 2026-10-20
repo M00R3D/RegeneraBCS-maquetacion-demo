@@ -5,7 +5,16 @@ const nameInput = document.getElementById("nombre");
 const passwordInput = document.getElementById("password");
 const submitButton = document.getElementById("authSubmit");
 const message = document.getElementById("authMessage");
+const passwordToggle = document.getElementById("togglePassword");
 let mode = "login";
+
+passwordToggle.addEventListener("click", () => {
+    const visible = passwordInput.type === "password";
+    passwordInput.type = visible ? "text" : "password";
+    passwordToggle.textContent = visible ? "Ocultar" : "Mostrar";
+    passwordToggle.setAttribute("aria-label", `${visible ? "Ocultar" : "Mostrar"} contraseña`);
+    passwordToggle.setAttribute("aria-pressed", String(visible));
+});
 
 function setMode(nextMode) {
     mode = nextMode;

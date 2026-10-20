@@ -35,8 +35,13 @@
                 <span class="page-label">PANEL DE CONTROL</span>
                 <h1 id="adminGreeting">Dashboard</h1>
             </div>
+            <nav class="admin-view-switch" aria-label="Cambiar vista">
+                <a href="admin.html" aria-current="page">Panel de administración</a>
+                <a href="index.html">Vista de usuario</a>
+            </nav>
             <div class="admin-header-actions">
                 <span id="adminUserName"></span>
+                <a class="secondary-button" href="perfil.html">Mi perfil</a>
                 <button id="adminNotificationIndicator" type="button" class="secondary-button" aria-label="Abrir notificaciones">Notificaciones</button>
                 <button id="adminLogout" type="button" class="secondary-button">Cerrar sesión</button>
             </div>
@@ -67,9 +72,11 @@
             <div class="admin-section-heading">
                 <div><span>GESTIÓN DE CONTENIDO</span><h2>Voluntariados</h2></div>
                 <select id="volunteerStateFilter" aria-label="Filtrar voluntariados por estado">
-                    <option value="todos">Todos los estados</option><option>pendiente</option><option>publicado</option><option>cancelado</option><option>finalizado</option>
+                    <option value="todos">Todos los estados</option><option>pendiente</option><option>publicado</option><option>rechazado</option><option>cancelado</option><option>finalizado</option>
                 </select>
+                <a class="admin-create-link" href="crear-contenido.html?tipo=voluntariado">Crear voluntariado +</a>
             </div>
+            <label class="admin-search">Buscar voluntariado<input type="search" data-table-search="volunteerTable" placeholder="Título, categoría o lugar"></label>
             <div class="admin-table-wrap" id="volunteerTable"></div>
         </section>
 
@@ -77,33 +84,47 @@
             <div class="admin-section-heading">
                 <div><span>GESTIÓN DE CONTENIDO</span><h2>Artículos</h2></div>
                 <select id="articleStateFilter" aria-label="Filtrar artículos por estado">
-                    <option value="todos">Todos los estados</option><option>pendiente</option><option>publicado</option><option>rechazado</option>
+                    <option value="todos">Todos los estados</option><option>pendiente</option><option>publicado</option><option>rechazado</option><option>retirado</option>
                 </select>
+                <a class="admin-create-link" href="crear-contenido.html?tipo=articulo">Crear artículo +</a>
             </div>
+            <label class="admin-search">Buscar artículo<input type="search" data-table-search="articleTable" placeholder="Título, autor o categoría"></label>
             <div class="admin-table-wrap" id="articleTable"></div>
         </section>
 
         <section class="admin-section" data-section="usuarios">
             <div class="admin-section-heading"><div><span>CUENTAS Y PERMISOS</span><h2>Usuarios</h2></div></div>
+            <label class="admin-search">Buscar usuario<input type="search" data-table-search="userTable" placeholder="Nombre o correo"></label>
             <div class="admin-table-wrap" id="userTable"></div>
         </section>
 
         <section class="admin-section" data-section="lugares">
             <div class="admin-section-heading"><div><span>CATÁLOGO</span><h2>Lugares</h2></div></div>
+            <label class="admin-search">Buscar lugar<input type="search" data-table-search="placeTable" placeholder="Nombre o dirección"></label>
+            <details class="admin-form-disclosure">
+                <summary>Agregar o editar lugar</summary>
             <form id="placeForm" class="admin-inline-form">
                 <input type="hidden" name="id">
                 <label>Nombre<input name="nombre" required maxlength="100"></label>
+                <label>Tipo<select name="tipo"><option value="playa">Playa</option><option value="parque">Parque</option><option value="reserva">Reserva</option><option value="zona urbana">Zona urbana</option><option value="otro">Otro</option></select></label>
+                <label class="wide-field">Descripción<textarea name="descripcion" rows="2" maxlength="1000"></textarea></label>
                 <label>Dirección<input name="direccion" required maxlength="200"></label>
-                <label>Latitud<input name="latitud" type="number" step="any"></label>
-                <label>Longitud<input name="longitud" type="number" step="any"></label>
+                <label>Latitud<input name="latitud" type="number" step="any" min="-90" max="90"></label>
+                <label>Longitud<input name="longitud" type="number" step="any" min="-180" max="180"></label>
+                <label class="wide-field">Información de conservación<textarea name="informacionConservacion" rows="2" maxlength="1000"></textarea></label>
+                <label class="wide-field">Fuente de información<input name="fuenteInformacion" maxlength="200"></label>
                 <button type="submit">Guardar lugar</button>
                 <button type="reset" class="secondary-button">Limpiar</button>
             </form>
+            </details>
             <div class="admin-table-wrap" id="placeTable"></div>
         </section>
 
         <section class="admin-section" data-section="flora">
             <div class="admin-section-heading"><div><span>CATÁLOGO</span><h2>Flora y fauna</h2></div></div>
+            <label class="admin-search">Buscar especie<input type="search" data-table-search="speciesTable" placeholder="Nombre, tipo o hábitat"></label>
+            <details class="admin-form-disclosure" id="speciesFormDisclosure">
+                <summary>Agregar o editar ficha</summary>
             <form id="speciesForm" class="admin-inline-form">
                 <input type="hidden" name="id">
                 <label>Nombre<input name="nombre" required maxlength="100"></label>
@@ -112,20 +133,29 @@
                 <label>Hábitat<input name="habitat" maxlength="200"></label>
                 <label>Conservación<input name="estadoConservacion" maxlength="100"></label>
                 <label>Ubicación<input name="ubicacion" maxlength="150"></label>
+                <label>Función ecológica<input name="funcionEcologica" maxlength="300"></label>
+                <label>Dato curioso<input name="datoCurioso" maxlength="300"></label>
+                <label class="wide-field">Amenazas<textarea name="amenazas" rows="2" maxlength="1000"></textarea></label>
+                <label class="wide-field">Recomendaciones<textarea name="recomendaciones" rows="2" maxlength="1000"></textarea></label>
+                <label class="wide-field">Fuentes (una por línea)<textarea name="fuentes" rows="3" maxlength="2000"></textarea></label>
+                <label class="wide-field">URL de imagen<input name="imagen" type="url" placeholder="https://"></label>
                 <label class="wide-field">Descripción<textarea name="descripcion" rows="2" required maxlength="1000"></textarea></label>
                 <button type="submit">Guardar especie</button>
                 <button type="reset" class="secondary-button">Limpiar</button>
             </form>
+            </details>
             <div class="admin-table-wrap" id="speciesTable"></div>
         </section>
 
         <section class="admin-section" data-section="notificaciones">
             <div class="admin-section-heading"><div><span>MENSAJERÍA</span><h2>Notificaciones</h2></div></div>
+            <label class="admin-search">Buscar notificación<input type="search" data-list-search="adminNotifications" placeholder="Título, destinatario o tipo"></label>
             <div id="adminNotifications" class="admin-notification-list"></div>
         </section>
 
         <section class="admin-section" data-section="auditoria">
             <div class="admin-section-heading"><div><span>TRAZABILIDAD</span><h2>Auditoría</h2></div></div>
+            <label class="admin-search">Buscar en auditoría<input type="search" data-table-search="auditTable" placeholder="Usuario, acción o entidad"></label>
             <div class="admin-table-wrap" id="auditTable"></div>
         </section>
     </main>

@@ -51,6 +51,31 @@
     font: inherit;
 }
 
+.password-field {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    border: 1px solid rgba(20, 32, 27, .16);
+    background: white;
+}
+
+.password-field input {
+    min-width: 0;
+    border: 0;
+}
+
+.password-field button {
+    align-self: stretch;
+    padding: 0 13px;
+    border: 0;
+    background: transparent;
+    color: var(--green);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
 .auth-box input:focus {
     outline: 2px solid rgba(47, 128, 100, .25);
     border-color: var(--green-light);

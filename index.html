@@ -49,10 +49,6 @@
                 Artículos
             </a>
 
-            <a href="#reporte">
-                Reportar
-            </a>
-
             <a href="login.html" class="user-nav">
                 Iniciar sesión
             </a>
@@ -92,10 +88,6 @@
             Artículos
         </a>
 
-        <a href="#reporte">
-            Reportar
-        </a>
-
         <a href="login.html" class="user-nav">
             Iniciar sesión
         </a>
@@ -108,121 +100,6 @@
     ========================== -->
 
     <main id="inicio">
-
-        <!-- =========================
-             HERO / FLORA Y FAUNA
-        ========================== -->
-
-        <section class="hero">
-
-            <div
-                class="hero-panel"
-                id="floraPanel"
-            >
-
-                <div class="panel-background"></div>
-
-                <div class="panel-overlay"></div>
-
-
-                <!-- TEXTO CENTRAL -->
-
-                <div class="hero-content">
-
-                    <p class="hero-small">
-                        BAJA CALIFORNIA SUR
-                    </p>
-
-                    <h1>
-                        Conoce.
-                        <span>Explora.</span>
-                        Regenera.
-                    </h1>
-
-                    <p class="hero-description">
-                        Descubre la riqueza natural de Baja California Sur
-                        y conoce formas más responsables de recorrer,
-                        disfrutar y proteger nuestro entorno.
-                    </p>
-
-                </div>
-
-
-                <!-- INFORMACIÓN DE FLORA -->
-
-                <div class="panel-content">
-
-                    <span class="panel-category">
-                        Flora y fauna
-                    </span>
-
-                    <h2 id="floraTitle">
-                        Ballena gris
-                    </h2>
-
-                    <p id="floraDescription">
-                        Conoce una de las especies marinas más representativas
-                        de Baja California Sur.
-                    </p>
-
-                    <a
-                        href="detalle.html?tipo=flora&id=ff-01"
-                        class="panel-button"
-                        id="floraDetailLink"
-                    >
-                        Explorar
-
-                        <span>
-                            →
-                        </span>
-
-                    </a>
-
-                </div>
-
-
-                <!-- CONTROLES -->
-
-                <div class="panel-controls">
-
-                    <button
-                        id="floraPrev"
-                        aria-label="Anterior"
-                    >
-                        ←
-                    </button>
-
-                    <div class="panel-counter">
-
-                        <span id="floraCurrent">
-                            01
-                        </span>
-
-                        /
-
-                        <span id="floraTotal">
-                            04
-                        </span>
-
-                    </div>
-
-                    <button
-                        id="floraNext"
-                        aria-label="Siguiente"
-                    >
-                        →
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =========================
-             INTRO
-        ========================== -->
 
         <section class="intro">
 
@@ -246,6 +123,11 @@
                 también significa aprender a cuidarlo y contribuir a que siga
                 siendo un lugar vivo para las próximas generaciones.
             </p>
+
+            <div class="home-actions">
+                <a class="home-primary-link" href="voluntariados.html">Explorar voluntariados <span>→</span></a>
+                <a class="home-secondary-link" href="flora.html">Descubrir flora y fauna</a>
+            </div>
 
         </section>
 
@@ -274,6 +156,29 @@
 
             <div class="volunteer-grid" data-home-listing="voluntariado"></div>
 
+        </section>
+
+        <section class="hero" aria-label="Especies de Baja California Sur">
+            <div class="hero-panel" id="floraPanel">
+                <div class="panel-background"></div>
+                <div class="panel-overlay"></div>
+                <div class="hero-content">
+                    <p class="hero-small">BAJA CALIFORNIA SUR</p>
+                    <h2>Conoce. <span>Explora.</span> Regenera.</h2>
+                    <p class="hero-description">Descubre la riqueza natural de Baja California Sur y conoce formas más responsables de recorrer, disfrutar y proteger nuestro entorno.</p>
+                </div>
+                <div class="panel-content">
+                    <span class="panel-category">Flora y fauna</span>
+                    <h3 id="floraTitle">Ballena gris</h3>
+                    <p id="floraDescription">Conoce una de las especies marinas más representativas de Baja California Sur.</p>
+                    <a href="detalle.html?tipo=flora&id=ff-01" class="panel-button" id="floraDetailLink">Explorar <span>→</span></a>
+                </div>
+                <div class="panel-controls">
+                    <button id="floraPrev" aria-label="Especie anterior">←</button>
+                    <div class="panel-counter"><span id="floraCurrent">01</span> / <span id="floraTotal">04</span></div>
+                    <button id="floraNext" aria-label="Siguiente especie">→</button>
+                </div>
+            </div>
         </section>
 
 
@@ -342,17 +247,7 @@
 
             </div>
 
-            <a
-                href="#"
-                class="report-button"
-            >
-                Crear reporte
-
-                <span>
-                    →
-                </span>
-
-            </a>
+            <p class="report-unavailable">La recepción de reportes todavía no está disponible en esta demo.</p>
 
         </section>
 

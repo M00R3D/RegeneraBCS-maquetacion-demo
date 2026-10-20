@@ -348,6 +348,7 @@
         const user = requireUser();
         const articles = getCollection("articulos");
         const now = new Date().toISOString();
+        const publishDirectly = user.rol === "administrador" && input.estadoInicial === "publicado";
         const article = {
             articulos_id: createId("art"),
             autor_id: user.usuario_id,
@@ -355,15 +356,19 @@
             contenido: String(input.contenido || "").trim(),
             imagen: String(input.imagen || ""),
             categoria: String(input.categoria || "").trim().toLowerCase(),
-            estado: "pendiente",
-            fechaPublicacion: null,
+            estado: publishDirectly ? "publicado" : "pendiente",
+            fechaPublicacion: publishDirectly ? now : null,
             fechaActualizacion: now
         };
         if (!article.titulo || !article.contenido || !article.categoria) throw new Error("Completa el título, la categoría y el contenido.");
         articles.unshift(article);
         saveCollection("articulos", articles);
-        addNotification(user.usuario_id, "moderacion", "Artículo enviado a revisión", `“${article.titulo}” está pendiente de aprobación.`, { tipo: "articulos", id: article.articulos_id });
-        audit(user.usuario_id, "CREA_ARTICULO", "articulos", article.articulos_id, "Artículo enviado a moderación.");
+        addNotification(user.usuario_id, publishDirectly ? "contenido" : "moderacion", publishDirectly ? "Artículo publicado" : "Artículo enviado a revisión", publishDirectly ? `“${article.titulo}” ya es público.` : `“${article.titulo}” está pendiente de aprobación.`, { tipo: "articulos", id: article.articulos_id });
+        audit(user.usuario_id, publishDirectly ? "ADMIN_CREA_ARTICULO_PUBLICADO" : "CREA_ARTICULO", "articulos", article.articulos_id, publishDirectly ? "Creó y publicó el artículo." : "Artículo enviado a moderación.");
+        if (publishDirectly) {
+            awardPoints(user.usuario_id, 25, "Artículo aprobado", "articulos", article.articulos_id);
+            checkUserAchievements(user.usuario_id);
+        }
         return article;
     }
 
@@ -389,7 +394,7 @@
             capacidad: Number(input.capacidad),
             requisitos: String(input.requisitos || "").trim(),
             materiales: String(input.materiales || "").trim(),
-            estado: "pendiente",
+            estado: user.rol === "administrador" && input.estadoInicial === "publicado" ? "publicado" : "pendiente",
             fechaCreacion: now,
             fechaActualizacion: now
         };
@@ -398,17 +403,91 @@
         }
         volunteers.unshift(volunteer);
         saveCollection("voluntariados", volunteers);
-        addNotification(user.usuario_id, "moderacion", "Voluntariado enviado a revisión", `“${volunteer.titulo}” está pendiente de aprobación.`, { tipo: "voluntariado", id: volunteer.voluntariados_id });
-        audit(user.usuario_id, "CREA_VOLUNTARIADO", "voluntariados", volunteer.voluntariados_id, "Voluntariado enviado a moderación.");
+        const publishedDirectly = volunteer.estado === "publicado";
+        addNotification(user.usuario_id, publishedDirectly ? "contenido" : "moderacion", publishedDirectly ? "Voluntariado publicado" : "Voluntariado enviado a revisión", publishedDirectly ? `“${volunteer.titulo}” ya es público.` : `“${volunteer.titulo}” está pendiente de aprobación.`, { tipo: "voluntariado", id: volunteer.voluntariados_id });
+        audit(user.usuario_id, publishedDirectly ? "ADMIN_CREA_VOLUNTARIADO_PUBLICADO" : "CREA_VOLUNTARIADO", "voluntariados", volunteer.voluntariados_id, publishedDirectly ? "Creó y publicó el voluntariado." : "Voluntariado enviado a moderación.");
         return volunteer;
+    }
+
+    function updateArticle(id, input) {
+        const user = requireUser();
+        const rows = getCollection("articulos");
+        const item = rows.find(row => row.articulos_id === id);
+        if (!item || user.rol !== "administrador" && item.autor_id !== user.usuario_id) throw new Error("No tienes permiso para editar este artículo.");
+        const wasPublished = item.estado === "publicado";
+        const title = String(input.titulo || "").trim();
+        const category = String(input.categoria || "").trim().toLowerCase();
+        const content = String(input.contenido || "").trim();
+        if (!title || !category || !content) throw new Error("Completa el título, la categoría y el contenido.");
+        item.titulo = title;
+        item.categoria = category;
+        item.contenido = content;
+        item.imagen = String(input.imagen || "");
+        item.fechaActualizacion = new Date().toISOString();
+        if (user.rol !== "administrador" && wasPublished) {
+            item.estado = "pendiente";
+            item.fechaPublicacion = null;
+        } else if (user.rol === "administrador" && ["pendiente", "publicado"].includes(input.estadoInicial)) {
+            item.estado = input.estadoInicial;
+            if (item.estado === "publicado" && !item.fechaPublicacion) item.fechaPublicacion = item.fechaActualizacion;
+        }
+        saveCollection("articulos", rows);
+        addNotification(item.autor_id, "moderacion", "Artículo actualizado", item.estado === "pendiente" ? `“${item.titulo}” está pendiente de revisión.` : `“${item.titulo}” fue actualizado.`, { tipo: "articulos", id });
+        audit(user.usuario_id, "ACTUALIZA_ARTICULO", "articulos", id, `Actualizó “${item.titulo}”.`);
+        if (item.estado === "publicado" && !wasPublished) {
+            awardPoints(item.autor_id, 25, "Artículo aprobado", "articulos", id);
+            checkUserAchievements(item.autor_id);
+        }
+        return item;
+    }
+
+    function updateVolunteer(id, input) {
+        const user = requireUser();
+        const rows = getCollection("voluntariados");
+        const item = rows.find(row => row.voluntariados_id === id);
+        if (!item || user.rol !== "administrador" && item.organizador_id !== user.usuario_id) throw new Error("No tienes permiso para editar este voluntariado.");
+        if (["cancelado", "finalizado"].includes(item.estado)) throw new Error("Las actividades canceladas o finalizadas no se pueden editar.");
+        const place = getById("lugares", input.lugar_id);
+        if (!place || place.estado !== "activo") throw new Error("Selecciona un lugar activo.");
+        const capacity = Number(input.capacidad);
+        const activeCount = getCollection("inscripciones").filter(row => row.voluntariado_id === id && ["activa", "completada"].includes(row.estado)).length;
+        if (!Number.isInteger(capacity) || capacity < 1 || capacity < activeCount) throw new Error("El cupo debe ser positivo y no menor que las inscripciones actuales.");
+        const title = String(input.titulo || "").trim();
+        const description = String(input.descripcion || "").trim();
+        if (!title || !description || !input.fecha || !input.horarioInicio || !input.horarioFin) throw new Error("Completa el título, la descripción, la fecha y el horario.");
+        if (String(input.fecha) < new Date().toISOString().slice(0, 10)) throw new Error("La fecha de la actividad debe ser futura.");
+        const previousState = item.estado;
+        Object.assign(item, {
+            titulo: title,
+            lugar_id: place.lugares_id,
+            categoria: normalizeCategory(input.categoria),
+            descripcion: description,
+            imagen: String(input.imagen || ""),
+            fecha: String(input.fecha),
+            horarioInicio: String(input.horarioInicio),
+            horarioFin: String(input.horarioFin),
+            ubicacion: String(input.ubicacion || "").trim(),
+            capacidad: capacity,
+            requisitos: String(input.requisitos || "").trim(),
+            materiales: String(input.materiales || "").trim(),
+            fechaActualizacion: new Date().toISOString()
+        });
+        if (user.rol !== "administrador" && previousState === "publicado") item.estado = "pendiente";
+        else if (user.rol === "administrador" && ["pendiente", "publicado"].includes(input.estadoInicial)) item.estado = input.estadoInicial;
+        saveCollection("voluntariados", rows);
+        const activeParticipants = getCollection("inscripciones").filter(row => row.voluntariado_id === id && row.estado === "activa");
+        activeParticipants.forEach(row => addNotification(row.usuario_id, "actualizacion", "Voluntariado actualizado", `“${item.titulo}” fue actualizado. Revisa la fecha, ubicación y requisitos.`, { tipo: "voluntariado", id }));
+        addNotification(item.organizador_id, "moderacion", "Voluntariado actualizado", item.estado === "pendiente" ? `“${item.titulo}” está pendiente de revisión.` : `“${item.titulo}” fue actualizado.`, { tipo: "voluntariado", id });
+        audit(user.usuario_id, "ACTUALIZA_VOLUNTARIADO", "voluntariados", id, `Actualizó “${item.titulo}”.`);
+        return item;
     }
 
     function moderateContent(type, id, state) {
         const admin = getCurrentUser();
         if (!admin || admin.rol !== "administrador") throw new Error("Solo administración puede moderar contenido.");
         const config = {
-            voluntariados: { pk: "voluntariados_id", states: ["publicado", "cancelado", "finalizado"], owner: "organizador_id", name: "voluntariado" },
-            articulos: { pk: "articulos_id", states: ["publicado", "rechazado"], owner: "autor_id", name: "artículo" }
+            voluntariados: { pk: "voluntariados_id", states: ["publicado", "rechazado", "cancelado", "finalizado"], owner: "organizador_id", name: "voluntariado" },
+            articulos: { pk: "articulos_id", states: ["publicado", "pendiente", "rechazado", "retirado"], owner: "autor_id", name: "artículo" }
         }[type];
         if (!config || !config.states.includes(state)) throw new Error("El estado solicitado no es válido.");
         const rows = getCollection(type);
@@ -421,16 +500,28 @@
         saveCollection(type, rows);
         const messages = {
             publicado: `Tu ${config.name} “${item.titulo}” fue publicado.`,
+            pendiente: `Tu ${config.name} “${item.titulo}” volvió a revisión.`,
             rechazado: `Tu ${config.name} “${item.titulo}” fue rechazado.`,
+            retirado: `Tu ${config.name} “${item.titulo}” fue retirado de la publicación.`,
             cancelado: `Tu voluntariado “${item.titulo}” fue cancelado.`,
             finalizado: `Tu voluntariado “${item.titulo}” fue marcado como finalizado.`
         };
         addNotification(item[config.owner], "moderacion", "Actualización de contenido", messages[state], { tipo: type === "articulos" ? "articulo" : "voluntariado", id });
         const action = {
-            articulos: { publicado: "ADMIN_PUBLICO_ARTICULO", rechazado: "ADMIN_RECHAZO_ARTICULO" },
-            voluntariados: { publicado: "ADMIN_PUBLICO_VOLUNTARIADO", cancelado: "ADMIN_CANCELA_VOLUNTARIADO", finalizado: "ADMIN_FINALIZA_VOLUNTARIADO" }
+            articulos: { publicado: "ADMIN_PUBLICO_ARTICULO", pendiente: "ADMIN_DEVUELVE_ARTICULO_A_REVISION", rechazado: "ADMIN_RECHAZO_ARTICULO", retirado: "ADMIN_RETIRA_ARTICULO" },
+            voluntariados: { publicado: "ADMIN_PUBLICO_VOLUNTARIADO", rechazado: "ADMIN_RECHAZA_VOLUNTARIADO", cancelado: "ADMIN_CANCELA_VOLUNTARIADO", finalizado: "ADMIN_FINALIZA_VOLUNTARIADO" }
         }[type][state];
         audit(admin.usuario_id, action, type, id, `Estado actualizado a ${state}.`);
+        if (type === "voluntariados" && state === "cancelado") {
+            const inscriptions = getCollection("inscripciones");
+            const affected = inscriptions.filter(row => row.voluntariado_id === id && row.estado === "activa");
+            affected.forEach(row => {
+                row.estado = "cancelada";
+                row.fechaCancelacion = new Date().toISOString();
+                addNotification(row.usuario_id, "cancelacion", "Voluntariado cancelado", `La actividad “${item.titulo}” fue cancelada.`, { tipo: "voluntariado", id });
+            });
+            if (affected.length) saveCollection("inscripciones", inscriptions);
+        }
         if (type === "articulos" && state === "publicado" && previousState !== "publicado") {
             audit(admin.usuario_id, "ARTICULO_APROBADO", "articulos", id, `Aprobó el artículo “${item.titulo}”.`);
             awardPoints(item[config.owner], 25, "Artículo aprobado", "articulos", id);
@@ -452,7 +543,12 @@
             habitat: String(input.habitat || "").trim(),
             estadoConservacion: String(input.estadoConservacion || "Sin evaluar").trim(),
             imagenes: input.imagen ? [String(input.imagen)] : [],
-            ubicacion: String(input.ubicacion || "").trim()
+            ubicacion: String(input.ubicacion || "").trim(),
+            funcionEcologica: String(input.funcionEcologica || "").trim(),
+            datoCurioso: String(input.datoCurioso || "").trim(),
+            amenazas: String(input.amenazas || "").trim(),
+            recomendaciones: String(input.recomendaciones || "").trim(),
+            fuentes: Array.isArray(input.fuentes) ? input.fuentes.map(value => String(value).trim()).filter(Boolean) : []
         };
         if (!item.nombre || !item.descripcion) throw new Error("Completa el nombre y la descripción.");
         rows.push(item);
@@ -464,10 +560,12 @@
     function removeFlora(id) {
         const admin = getCurrentUser();
         if (!admin || admin.rol !== "administrador") throw new Error("Solo administración puede gestionar flora/fauna.");
-        const item = getById("floraFauna", id);
+        const rows = getCollection("floraFauna");
+        const item = rows.find(row => row.floraFauna_id === id);
         if (!item) throw new Error("No se encontró el registro de flora/fauna.");
-        saveCollection("floraFauna", getCollection("floraFauna").filter(row => row.floraFauna_id !== id));
-        audit(admin.usuario_id, "ADMIN_ELIMINA_FLORA_FAUNA", "floraFauna", id, `Eliminó ${item.nombre}.`);
+        item.estado = "inactivo";
+        saveCollection("floraFauna", rows);
+        audit(admin.usuario_id, "ADMIN_DESACTIVA_FLORA_FAUNA", "floraFauna", id, `Desactivó ${item.nombre}.`);
     }
 
     function updateUser(id, changes) {
@@ -486,8 +584,33 @@
                 audit(admin.usuario_id, "ADMIN_CAMBIO_ROL", "usuarios", id, `Rol cambiado de ${oldRole} a ${user.rol}.`);
             }
         }
+        if (changes.solicitudOrganizadorEstado === "aprobada" && user.solicitudOrganizadorEstado !== "aprobada") {
+            user.solicitudOrganizadorEstado = "aprobada";
+            user.organizadorVerificado = true;
+            user.fechaDecisionOrganizador = new Date().toISOString();
+            user.fechaVerificacionOrganizador = user.fechaDecisionOrganizador;
+            user.decididoPorOrganizador = admin.usuario_id;
+            user.verificadoPor = admin.usuario_id;
+            addNotification(user.usuario_id, "verificacion", "Solicitud aprobada", "Tu cuenta fue verificada para organizar voluntariados. El rol no cambia automáticamente.", { tipo: "perfil", id });
+            audit(admin.usuario_id, "ADMIN_APRUEBA_SOLICITUD_ORGANIZADOR", "usuarios", id, "Aprobó la solicitud y verificó la cuenta sin cambiar su rol.");
+        } else if (["pendiente", "rechazada", "sin solicitar"].includes(changes.solicitudOrganizadorEstado) && user.solicitudOrganizadorEstado !== changes.solicitudOrganizadorEstado) {
+            user.solicitudOrganizadorEstado = changes.solicitudOrganizadorEstado;
+            user.fechaDecisionOrganizador = changes.solicitudOrganizadorEstado === "pendiente" ? null : new Date().toISOString();
+            user.decididoPorOrganizador = changes.solicitudOrganizadorEstado === "pendiente" ? null : admin.usuario_id;
+            if (changes.solicitudOrganizadorEstado === "rechazada") user.organizadorVerificado = false;
+            addNotification(user.usuario_id, "verificacion", "Solicitud de organizador actualizada", `Estado de solicitud: ${user.solicitudOrganizadorEstado}.`, { tipo: "perfil", id });
+            audit(admin.usuario_id, "ADMIN_DECIDE_SOLICITUD_ORGANIZADOR", "usuarios", id, `Solicitud de organizador: ${user.solicitudOrganizadorEstado}.`);
+        }
         if (typeof changes.organizadorVerificado === "boolean" && user.organizadorVerificado !== changes.organizadorVerificado) {
             user.organizadorVerificado = changes.organizadorVerificado;
+            if (user.organizadorVerificado) {
+                user.fechaVerificacionOrganizador = new Date().toISOString();
+                user.verificadoPor = admin.usuario_id;
+                user.solicitudOrganizadorEstado = "aprobada";
+            } else {
+                user.fechaRevocacionOrganizador = new Date().toISOString();
+                user.verificadoPor = null;
+            }
             audit(admin.usuario_id, user.organizadorVerificado ? "ADMIN_VERIFICA_ORGANIZADOR" : "ADMIN_RETIRA_VERIFICACION_ORGANIZADOR", "usuarios", id, `Verificación de organizador: ${user.organizadorVerificado}.`);
         }
         if (["activo", "inactivo"].includes(changes.estado) && user.estado !== changes.estado) {
@@ -499,6 +622,22 @@
         return user;
     }
 
+    function requestOrganizerVerification() {
+        const user = getCurrentUser();
+        if (!user) return { ok: false, message: "Inicia sesión para solicitar la verificación." };
+        if (user.rol !== "usuario") return { ok: false, message: "Esta solicitud está disponible para cuentas de usuario." };
+        if (user.solicitudOrganizadorEstado === "pendiente") return { ok: false, message: "Tu solicitud ya está pendiente de revisión." };
+        const users = getCollection("usuarios");
+        const storedUser = users.find(row => row.usuario_id === user.usuario_id);
+        storedUser.solicitudOrganizadorEstado = "pendiente";
+        storedUser.fechaSolicitudOrganizador = new Date().toISOString();
+        saveCollection("usuarios", users);
+        getCollection("usuarios").filter(row => row.rol === "administrador" && row.estado === "activo")
+            .forEach(admin => addNotification(admin.usuario_id, "verificacion", "Solicitud de organizador", `${user.nombre} solicitó verificar su cuenta de organizador.`, { tipo: "perfil", id: user.usuario_id }));
+        audit(user.usuario_id, "SOLICITA_VERIFICACION_ORGANIZADOR", "usuarios", user.usuario_id, "Solicitó verificación como organizador.");
+        return { ok: true, message: "Tu solicitud fue enviada para revisión." };
+    }
+
     function removeContent(type, id) {
         const admin = getCurrentUser();
         if (!admin || admin.rol !== "administrador") throw new Error("Solo administración puede eliminar contenido.");
@@ -508,11 +647,20 @@
         const rows = getCollection(type);
         const item = rows.find(row => row[pk] === id);
         if (!item) throw new Error("No se encontró el contenido.");
-        saveCollection(type, rows.filter(row => row[pk] !== id));
         if (type === "voluntariados") {
-            saveCollection("inscripciones", getCollection("inscripciones").filter(row => row.voluntariado_id !== id));
-            saveCollection("asistencias", getCollection("asistencias").filter(row => row.voluntariado_id !== id));
+            const inscriptions = getCollection("inscripciones");
+            const hasHistory = inscriptions.some(row => row.voluntariado_id === id)
+                || getCollection("asistencias").some(row => row.voluntariado_id === id);
+            if (hasHistory) {
+                if (item.estado === "finalizado") throw new Error("Un voluntariado finalizado con historial no se puede eliminar.");
+                if (item.estado === "cancelado") return item;
+                return moderateContent("voluntariados", id, "cancelado");
+            }
         }
+        if (type === "articulos" && item.estado === "publicado") {
+            return moderateContent("articulos", id, "retirado");
+        }
+        saveCollection(type, rows.filter(row => row[pk] !== id));
         audit(admin.usuario_id, action, type, id, `Eliminó “${item.titulo}”.`);
     }
 
@@ -533,20 +681,24 @@
         if (!admin || admin.rol !== "administrador") throw new Error("Solo administración puede crear lugares.");
         const rows = getCollection("lugares");
         const now = new Date().toISOString();
+        const latitude = input.latitud === "" || input.latitud == null ? null : Number(input.latitud);
+        const longitude = input.longitud === "" || input.longitud == null ? null : Number(input.longitud);
+        if (latitude != null && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)) throw new Error("La latitud debe estar entre -90 y 90.");
+        if (longitude != null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)) throw new Error("La longitud debe estar entre -180 y 180.");
         const place = {
             lugares_id: createId("lugar"),
             nombre: String(input.nombre || "").trim(),
             descripcion: String(input.descripcion || "").trim(),
-            tipo: String(input.tipo || "sitio"),
+            tipo: String(input.tipo || "otro"),
             ubicacion: {
                 nombre: String(input.nombre || "").trim(),
                 direccion: String(input.direccion || "").trim(),
-                latitud: Number(input.latitud) || null,
-                longitud: Number(input.longitud) || null
+                latitud: latitude,
+                longitud: longitude
             },
-            informacionConservacion: "",
+            informacionConservacion: String(input.informacionConservacion || "").trim(),
             imagenes: [],
-            fuenteInformacion: "Regenera BCS",
+            fuenteInformacion: String(input.fuenteInformacion || "").trim(),
             fechaActualizacion: now,
             estado: "activo"
         };
@@ -562,13 +714,8 @@
         if (!admin || admin.rol !== "administrador") throw new Error("Solo administración puede gestionar lugares.");
         const place = getById("lugares", id);
         if (!place) throw new Error("No se encontró el lugar.");
-        if (getCollection("voluntariados").some(volunteer => volunteer.lugar_id === id)) {
-            updatePlace(id, { estado: "inactivo" });
-            return "inactivo";
-        }
-        saveCollection("lugares", getCollection("lugares").filter(row => row.lugares_id !== id));
-        audit(admin.usuario_id, "ADMIN_ELIMINA_LUGAR", "lugares", id, `Eliminó el lugar ${place.nombre}.`);
-        return "eliminado";
+        updatePlace(id, { estado: "inactivo" });
+        return "inactivo";
     }
 
     function updateFlora(id, changes) {
@@ -583,8 +730,8 @@
         return item;
     }
 
-    function canManageVolunteer(user) {
-        return Boolean(user && (user.rol === "administrador" || user.rol === "organizador" && user.organizadorVerificado));
+    function canManageVolunteer(user, volunteer) {
+        return Boolean(user && volunteer && (user.rol === "administrador" || volunteer.organizador_id === user.usuario_id));
     }
 
     function addNotification(userId, type, title, message, entity, priority = "normal", data = {}) {
@@ -861,15 +1008,13 @@
         </article>`;
     }
 
-    function generateAttendanceCode(volunteerId, expiresAt = "") {
+    function generateAttendanceCode(volunteerId) {
         const organizer = getCurrentUser();
-        if (!organizer || !canManageVolunteer(organizer)) throw new Error("Solo administración o un organizador verificado puede generar códigos.");
         const volunteer = getById("voluntariados", volunteerId);
-        if (!volunteer || organizer.rol !== "administrador" && volunteer.organizador_id !== organizer.usuario_id) throw new Error("No tienes permiso para este voluntariado.");
-        if (volunteer.estado === "cancelado") throw new Error("No se puede generar un código para un voluntariado cancelado.");
+        if (!canManageVolunteer(organizer, volunteer)) throw new Error("Solo quien creó esta actividad o administración puede generar códigos.");
+        if (volunteer.estado !== "publicado") throw new Error("Solo se generan códigos para actividades publicadas.");
         const now = new Date();
-        const expiration = expiresAt ? new Date(expiresAt) : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        if (Number.isNaN(expiration.getTime()) || expiration <= now) throw new Error("La fecha de expiración debe ser posterior al momento actual.");
+        const expiration = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         const codes = getCollection("codigosAsistencia");
         codes.filter(row => row.voluntariado_id === volunteerId && row.activo).forEach(row => { row.activo = false; });
         let code = `REGENERA-${randomAttendanceToken()}`;
@@ -923,7 +1068,7 @@
         if (!user) return { ok: false, reason: "login", message: "Inicia sesión para registrar tu asistencia." };
         const volunteer = getById("voluntariados", volunteerId);
         if (!volunteer) return { ok: false, message: "No se encontró este voluntariado." };
-        if (volunteer.estado === "cancelado") return { ok: false, message: "Este voluntariado fue cancelado." };
+        if (!["publicado", "finalizado"].includes(volunteer.estado)) return { ok: false, message: "La asistencia solo se registra en actividades publicadas o finalizadas." };
         if (!getCollection("inscripciones").some(row => row.usuario_id === user.usuario_id && row.voluntariado_id === volunteerId && ["activa", "completada"].includes(row.estado))) {
             return { ok: false, message: "No estás inscrito en este voluntariado." };
         }
@@ -957,7 +1102,7 @@
             const organizer = getById("usuarios", item.organizador_id);
             const participants = getCollection("inscripciones").filter(row => row.voluntariado_id === item.voluntariados_id && ["activa", "completada"].includes(row.estado)).length;
             return { ...item, lugar: place, organizador: organizer, participantes: participants };
-        });
+        }).sort((left, right) => new Date(`${left.fecha}T${left.horarioInicio}`) - new Date(`${right.fecha}T${right.horarioInicio}`));
     }
 
     function getPublicArticles() {
@@ -965,7 +1110,7 @@
     }
 
     function getPublicFlora() {
-        return getCollection("floraFauna");
+        return getCollection("floraFauna").filter(item => item.estado !== "inactivo");
     }
 
     function getVolunteerParticipants(volunteerId) {
@@ -1016,10 +1161,9 @@
 
     function markAttendance(volunteerId, userId) {
         const current = getCurrentUser();
-        if (!current || !canManageVolunteer(current)) return { ok: false, message: "Solo administración o un organizador verificado puede confirmar asistencia." };
         const volunteer = getById("voluntariados", volunteerId);
-        if (!volunteer || current.rol !== "administrador" && volunteer.organizador_id !== current.usuario_id) return { ok: false, message: "No tienes permiso para gestionar este voluntariado." };
-        if (volunteer.estado === "cancelado") return { ok: false, message: "Este voluntariado fue cancelado." };
+        if (!canManageVolunteer(current, volunteer)) return { ok: false, message: "Solo quien creó esta actividad o administración puede gestionar asistencia." };
+        if (!["publicado", "finalizado"].includes(volunteer.estado)) return { ok: false, message: "La asistencia solo se registra en actividades publicadas o finalizadas." };
         if (getCollection("asistencias").some(row => row.usuario_id === userId && row.voluntariado_id === volunteerId && row.confirmada)) return { ok: false, message: "La asistencia ya está confirmada." };
         const result = completeAttendance(volunteer, userId, "codigo", current.usuario_id);
         if (!result.ok) return { ...result, message: "No hay una inscripción activa para esta persona." };
@@ -1038,6 +1182,7 @@
         if (!item) return null;
         if (type === "articulo" && item.estado !== "publicado" && user?.rol !== "administrador" && user?.usuario_id !== item.autor_id) return null;
         if (type === "voluntariado" && item.estado !== "publicado" && user?.rol !== "administrador" && user?.usuario_id !== item.organizador_id) return null;
+        if (type === "flora" && item.estado === "inactivo" && user?.rol !== "administrador") return null;
         return item;
     }
 
@@ -1067,6 +1212,20 @@
         return new Intl.DateTimeFormat("es-MX", { hour: "numeric", minute: "2-digit" }).format(date);
     }
 
+    function formatVolunteerDuration(volunteer) {
+        const start = /^(\d{2}):(\d{2})$/.exec(String(volunteer?.horarioInicio || ""));
+        const end = /^(\d{2}):(\d{2})$/.exec(String(volunteer?.horarioFin || ""));
+        if (!start || !end) return "";
+        const startMinutes = Number(start[1]) * 60 + Number(start[2]);
+        let endMinutes = Number(end[1]) * 60 + Number(end[2]);
+        if (endMinutes < startMinutes) endMinutes += 24 * 60;
+        const duration = endMinutes - startMinutes;
+        if (duration <= 0) return "";
+        const hours = Math.floor(duration / 60);
+        const minutes = duration % 60;
+        return [hours ? `${hours} h` : "", minutes ? `${minutes} min` : ""].filter(Boolean).join(" ");
+    }
+
     function statusBadge(status) {
         const safe = escapeHtml(status);
         return `<span class="status-badge status-${safe}">${safe}</span>`;
@@ -1079,7 +1238,6 @@
             link.textContent = user ? "Mi perfil" : "Iniciar sesión";
         });
         document.querySelectorAll(".nav, .mobile-menu").forEach(nav => {
-            if (!user) return;
             const addLink = (key, text, href, condition = true) => {
                 let link = nav.querySelector(`[data-session-link="${key}"]`);
                 if (!condition) {
@@ -1094,9 +1252,35 @@
                 link.href = href;
                 link.textContent = text;
             };
-            addLink("admin", "Dashboard", "admin.html", user.rol === "administrador");
-            addLink("create", "Crear contenido", "crear-contenido.html?tipo=articulo", true);
-            addLink("medals", "Mis medallas", "medallas.html", true);
+            let profileLink = nav.querySelector(".user-nav, [data-session-link=profile], a[href='perfil.html']");
+            if (user) {
+                if (!profileLink) {
+                    addLink("profile", "Mi perfil", "perfil.html");
+                    profileLink = nav.querySelector('[data-session-link="profile"]');
+                }
+                profileLink.href = "perfil.html";
+                profileLink.textContent = "Mi perfil";
+                profileLink.dataset.sessionLink = "profile";
+            } else {
+                addLink("profile", "", "", false);
+                if (profileLink) {
+                    profileLink.href = "login.html";
+                    profileLink.textContent = "Iniciar sesión";
+                    profileLink.classList.add("user-nav");
+                    delete profileLink.dataset.sessionLink;
+                } else {
+                    addLink("auth", "Iniciar sesión", "login.html");
+                }
+            }
+            addLink("create", "", "", false);
+            addLink("medals", "", "", false);
+            addLink("admin", "Dashboard", "admin.html", user?.rol === "administrador");
+            addLink("organizer", "Mis voluntariados", "perfil.html#organizerSection", user && (user.rol === "organizador" || user.rol === "administrador"));
+            nav.querySelectorAll('a[href="#reporte"], a[href="index.html#reporte"]').forEach(link => link.remove());
+            if (!user) {
+                nav.querySelectorAll("[data-session-action=logout], .notification-trigger, .notification-panel").forEach(item => item.remove());
+                return;
+            }
 
             if (!nav.querySelector(`[data-session-action="logout"]`)) {
                 const button = document.createElement("button");
@@ -1107,8 +1291,56 @@
                 button.addEventListener("click", logout);
                 nav.appendChild(button);
             }
-            nav.querySelectorAll(".user-nav").forEach(link => link.remove());
         });
+        const primaryNav = document.querySelector(".topbar .nav");
+        const header = primaryNav?.closest(".topbar");
+        if (primaryNav && header) {
+            let menuButton = header.querySelector(".menu-button");
+            if (!menuButton) {
+                menuButton = document.createElement("button");
+                menuButton.className = "menu-button";
+                menuButton.type = "button";
+                menuButton.textContent = "☰";
+                header.append(menuButton);
+            }
+            menuButton.setAttribute("aria-label", menuButton.getAttribute("aria-label") || "Abrir menú");
+            menuButton.setAttribute("aria-expanded", "false");
+            let mobileMenu = header.parentElement.querySelector(".mobile-menu");
+            if (!mobileMenu) {
+                mobileMenu = document.createElement("nav");
+                mobileMenu.className = "mobile-menu";
+                mobileMenu.setAttribute("aria-label", "Navegación móvil");
+                header.insertAdjacentElement("afterend", mobileMenu);
+            }
+            mobileMenu.innerHTML = "";
+            primaryNav.querySelectorAll("a").forEach(link => {
+                const mobileLink = link.cloneNode(true);
+                mobileLink.addEventListener("click", () => {
+                    mobileMenu.classList.remove("active");
+                    menuButton.setAttribute("aria-expanded", "false");
+                });
+                mobileMenu.append(mobileLink);
+            });
+            const user = getCurrentUser();
+            if (user) {
+                const logoutButton = document.createElement("button");
+                logoutButton.type = "button";
+                logoutButton.className = "session-logout";
+                logoutButton.textContent = "Cerrar sesión";
+                logoutButton.addEventListener("click", logout);
+                mobileMenu.append(logoutButton);
+            }
+            const existingHomeController = menuButton.id === "menuButton" && mobileMenu.id === "mobileMenu";
+            if (!existingHomeController && !menuButton.dataset.menuBound) {
+                menuButton.addEventListener("click", () => {
+                    const opening = !mobileMenu.classList.contains("active");
+                    mobileMenu.classList.toggle("active", opening);
+                    menuButton.setAttribute("aria-expanded", String(opening));
+                    menuButton.setAttribute("aria-label", opening ? "Cerrar menú" : "Abrir menú");
+                });
+                menuButton.dataset.menuBound = "true";
+            }
+        }
         renderNotificationBadge();
     }
 
@@ -1197,7 +1429,7 @@
                         <h3>${escapeHtml(volunteer.titulo)}</h3>
                         <div class="volunteer-meta">
                             <span>📅 ${escapeHtml(formatDate(volunteer.fecha))}</span>
-                            <span>🕐 ${escapeHtml(formatTime(volunteer.horarioInicio))}–${escapeHtml(formatTime(volunteer.horarioFin))}</span>
+                            <span>🕐 ${escapeHtml(formatTime(volunteer.horarioInicio))}–${escapeHtml(formatTime(volunteer.horarioFin))}${formatVolunteerDuration(volunteer) ? ` · ${escapeHtml(formatVolunteerDuration(volunteer))}` : ""}</span>
                             <span>📍 ${escapeHtml(place?.nombre || "Lugar por confirmar")}</span>
                             <span>👥 ${current}/${volunteer.capacidad} participantes</span>
                         </div>
@@ -1237,7 +1469,10 @@
         const container = document.querySelector('[data-content-listing="articulo"]');
         if (!container) return;
         const articles = getPublicArticles();
-        container.innerHTML = articles.map(article => `
+        const createTile = `<a class="article-create-tile" href="crear-contenido.html?tipo=articulo" aria-label="Crear un artículo">
+            <span aria-hidden="true">+</span><strong>Crear artículo</strong><small>Comparte una iniciativa o conocimiento ambiental</small>
+        </a>`;
+        const cards = articles.map(article => `
             <article class="article-page-card">
                 <div class="article-page-image" style="background-image:url('${escapeHtml(article.imagen)}')"></div>
                 <div class="article-page-content">
@@ -1247,22 +1482,30 @@
                     <p class="article-meta">${escapeHtml(article.autor?.nombre || "Autor por confirmar")} · ${escapeHtml(formatDate(article.fechaPublicacion))}</p>
                     <a class="article-link" href="${detailUrl("articulo", article.articulos_id)}">Leer artículo →</a>
                 </div>
-            </article>`).join("") || '<p class="empty-state">Aún no hay artículos publicados.</p>';
+            </article>`).join("");
+        container.innerHTML = `${createTile}${cards || '<p class="empty-state">Aún no hay artículos publicados.</p>'}`;
     }
 
     function renderFloraListing() {
         const container = document.querySelector('[data-content-listing="flora"]');
         if (!container) return;
         const filter = document.getElementById("floraFilter")?.value || "todos";
-        const entries = getPublicFlora().filter(item => filter === "todos" || item.tipo === filter);
+        const query = String(document.getElementById("floraSearch")?.value || "").trim().toLocaleLowerCase("es-MX");
+        const entries = getPublicFlora().filter(item => {
+            const matchesType = filter === "todos" || item.tipo === filter;
+            const searchable = [item.nombre, item.nombreCientifico, item.habitat].join(" ").toLocaleLowerCase("es-MX");
+            return matchesType && (!query || searchable.includes(query));
+        });
         container.innerHTML = entries.map(item => `
             <article class="info-card">
                 <div class="info-card-image" style="background-image:url('${escapeHtml(item.imagenes?.[0] || "")}')"></div>
                 <div class="info-card-content">
-                    <span class="info-card-category">${escapeHtml(item.tipo)} · ${escapeHtml(item.estadoConservacion)}</span>
+                    <span class="info-card-category">${escapeHtml(item.tipo)}</span>
                     <h3>${escapeHtml(item.nombre)}</h3>
+                    <p class="flora-scientific-name">${escapeHtml(item.nombreCientifico || "Nombre científico no registrado en la demo")}</p>
                     <p>${escapeHtml(item.descripcion)}</p>
-                    <a class="info-card-link" href="${detailUrl("flora", item.floraFauna_id)}">Ver detalles →</a>
+                    <p class="flora-card-meta"><strong>Hábitat:</strong> ${escapeHtml(item.habitat || "Información no disponible en la demo")}</p>
+                    <a class="info-card-link" href="${detailUrl("flora", item.floraFauna_id)}">Explorar ficha →</a>
                 </div>
             </article>`).join("") || '<p class="empty-state">No hay especies en este filtro.</p>';
     }
@@ -1281,8 +1524,10 @@
 
         const isVolunteer = type === "voluntariado";
         const isFlora = type === "flora";
+        const isArticle = type === "articulo";
         const title = item.titulo || item.nombre;
         const image = isFlora ? item.imagenes?.[0] : item.imagen;
+        const detailCategory = isFlora ? item.nombreCientifico || "Ficha ambiental" : item.categoria || "";
         const user = getCurrentUser();
         const author = isVolunteer ? getById("usuarios", item.organizador_id) : !isFlora ? getById("usuarios", item.autor_id) : null;
         const place = isVolunteer ? getPlace(item) : null;
@@ -1294,14 +1539,14 @@
         const hasAttendance = Boolean(isVolunteer && user && getCollection("asistencias").some(row => row.usuario_id === user.usuario_id && row.voluntariado_id === id && row.confirmada));
         const isOwner = Boolean(user && isVolunteer && item.organizador_id === user.usuario_id);
         const admin = user?.rol === "administrador";
-        const manages = canManageVolunteer(user) && (admin || isOwner);
+        const manages = isVolunteer && ["publicado", "finalizado"].includes(item.estado) && canManageVolunteer(user, item);
         const attendanceCode = manages && isVolunteer ? getAttendanceCode(id) : null;
         const codeExpired = attendanceCode?.fechaExpiracion && new Date(attendanceCode.fechaExpiracion) <= new Date();
         const returnPage = { articulo: "articulos.html", flora: "flora.html", voluntariado: "voluntariados.html" }[type] || "index.html";
         const details = isVolunteer ? `
             <div class="detail-meta">
                 <span>📅 ${escapeHtml(formatDate(item.fecha))}</span>
-                <span>🕐 ${escapeHtml(formatTime(item.horarioInicio))}–${escapeHtml(formatTime(item.horarioFin))}</span>
+                <span>🕐 ${escapeHtml(formatTime(item.horarioInicio))}–${escapeHtml(formatTime(item.horarioFin))}${formatVolunteerDuration(item) ? ` · ${escapeHtml(formatVolunteerDuration(item))}` : ""}</span>
                 <span>📍 ${escapeHtml(place?.nombre || "Lugar no disponible")}</span>
                 <span>👥 ${count}/${escapeHtml(item.capacidad)} participantes</span>
             </div>
@@ -1313,8 +1558,41 @@
                 <div><dt>Materiales</dt><dd>${escapeHtml(item.materiales || "No especificados")}</dd></div>
                 ${place?.ubicacion?.latitud != null ? `<div><dt>Coordenadas</dt><dd>${escapeHtml(place.ubicacion.latitud)}, ${escapeHtml(place.ubicacion.longitud)}</dd></div>` : ""}
             </dl>` : isFlora ? `
-            <div class="detail-meta"><span>${escapeHtml(item.tipo)}</span><span>${escapeHtml(item.estadoConservacion)}</span><span>${escapeHtml(item.ubicacion)}</span></div>
-            <dl class="detail-facts"><div><dt>Nombre científico</dt><dd>${escapeHtml(item.nombreCientifico)}</dd></div><div><dt>Hábitat</dt><dd>${escapeHtml(item.habitat)}</dd></div></dl>` : "";
+            <div class="flora-detail-stages">
+                <section class="flora-detail-stage">
+                    <span>ETAPA 1 · IDENTIFICACIÓN</span><h2>Identificación</h2>
+                    <dl class="detail-facts">
+                        <div><dt>Nombre común</dt><dd>${escapeHtml(item.nombre || "No disponible en la demo")}</dd></div>
+                        <div><dt>Nombre científico</dt><dd>${escapeHtml(item.nombreCientifico || "No registrado en la demo")}</dd></div>
+                        <div><dt>Tipo</dt><dd>${escapeHtml(item.tipo || "No clasificado")}</dd></div>
+                        <div><dt>Conservación</dt><dd>${escapeHtml(item.estadoConservacion ? `Dato de demostración: ${item.estadoConservacion}. Fuente no registrada.` : "No disponible en la demo")}</dd></div>
+                    </dl>
+                </section>
+                <section class="flora-detail-stage">
+                    <span>ETAPA 2 · DESCRIPCIÓN</span><h2>Descripción y hábitat</h2>
+                    <div class="detail-copy"><p>${escapeHtml(item.descripcion || "Descripción no disponible en la demo.")}</p></div>
+                    <dl class="detail-facts">
+                        <div><dt>Hábitat</dt><dd>${escapeHtml(item.habitat || "No disponible en la demo")}</dd></div>
+                        <div><dt>Función ecológica</dt><dd>${escapeHtml(item.funcionEcologica || "No documentada en los datos de la demo")}</dd></div>
+                        <div><dt>Dato curioso</dt><dd>${escapeHtml(item.datoCurioso || "No documentado en los datos de la demo")}</dd></div>
+                    </dl>
+                </section>
+                <section class="flora-detail-stage">
+                    <span>ETAPA 3 · DISTRIBUCIÓN</span><h2>Ubicación en Baja California Sur</h2>
+                    <p>${escapeHtml(item.ubicacion || "Distribución no registrada en la demo")}</p>
+                    <p class="detail-data-note">La ubicación es orientativa. Esta demo no incluye mapa ni datos de observación verificados.</p>
+                </section>
+                <section class="flora-detail-stage">
+                    <span>ETAPA 4 · CONSERVACIÓN</span><h2>Conservación</h2>
+                    <dl class="detail-facts">
+                        <div><dt>Amenazas documentadas</dt><dd>${escapeHtml(item.amenazas || "No documentadas en la demo")}</dd></div>
+                        <div><dt>Recomendaciones específicas</dt><dd>${escapeHtml(item.recomendaciones || "No documentadas en la demo")}</dd></div>
+                        <div><dt>Fuentes</dt><dd>${escapeHtml(Array.isArray(item.fuentes) && item.fuentes.length ? item.fuentes.join(" · ") : "No registradas en la demo")}</dd></div>
+                    </dl>
+                    <p class="detail-data-note">Como pauta general, observa sin manipular organismos y respeta las indicaciones del área que visitas.</p>
+                </section>
+            </div>` : `
+            <div class="detail-meta"><span>${escapeHtml(item.categoria || "Artículo ambiental")}</span><span>${escapeHtml(author?.nombre || "Autor por confirmar")}</span><span>${escapeHtml(formatDate(item.fechaPublicacion || item.fechaActualizacion))}</span></div>`;
         const canJoin = isVolunteer && item.estado === "publicado" && !hasVolunteerStarted(item);
         const registrationClosed = isVolunteer && item.estado === "publicado" && hasVolunteerStarted(item) && !mine;
         const participates = isVolunteer && item.estado === "publicado" && !hasAttendance && canJoin ? `<div class="participation-actions">
@@ -1324,16 +1602,17 @@
         </div>` : registrationClosed ? '<p class="form-message is-error">La inscripción está cerrada: la actividad ya comenzó o su fecha no es válida.</p>' : "";
         const userAttendance = isVolunteer && user && mine && !hasAttendance
             ? `<form class="attendance-code-form" id="attendanceCodeForm" data-volunteer-id="${escapeHtml(id)}">
-                <label for="attendanceCodeInput">Ingresa el código de asistencia</label>
-                <div><input id="attendanceCodeInput" name="codigo" autocomplete="one-time-code" placeholder="REGENERA-XXXXXX" required><button type="submit">Confirmar asistencia</button></div>
+                <label for="attendanceCodeInput">Código de asistencia</label>
+                <p>Introduce el código que te proporcione el organizador. El escaneo QR no está disponible en esta demo.</p>
+                <div><input id="attendanceCodeInput" name="codigo" autocomplete="one-time-code" placeholder="Código proporcionado por el organizador" required><button type="submit">Confirmar asistencia</button></div>
                 <p class="form-message" id="attendanceCodeMessage" role="status" aria-live="polite"></p>
             </form>`
             : "";
         const management = manages ? `<section class="participant-panel"><h2>Personas inscritas (${inscriptions.length})</h2>
             <div class="attendance-control">
                 <div><span class="detail-label">CONTROL DE ASISTENCIA</span><h3>${escapeHtml(item.titulo)}</h3><p>${count} / ${escapeHtml(item.capacidad)} participantes · ${escapeHtml(formatDate(item.fecha))}</p></div>
-                <label for="attendanceExpiry">Expiración del código (opcional)</label>
-                <div class="attendance-code-actions"><input id="attendanceExpiry" type="datetime-local"><button type="button" class="attendance-button" id="generateAttendanceCode">Generar nuevo código</button></div>
+                <p>El código de demostración vence automáticamente siete días después de generarse.</p>
+                <div class="attendance-code-actions"><button type="button" class="attendance-button" id="generateAttendanceCode">Generar nuevo código</button></div>
                 ${attendanceCode ? `<div class="attendance-code-display"><span>CÓDIGO ACTIVO${codeExpired ? " · EXPIRADO" : ""}</span><strong>${escapeHtml(attendanceCode.codigo)}</strong><small>Expira ${escapeHtml(formatDate(attendanceCode.fechaExpiracion))} ${escapeHtml(formatTime(attendanceCode.fechaExpiracion))}</small>
                     <button type="button" class="attendance-button secondary-button" id="showAttendanceQr" ${codeExpired ? "disabled" : ""}>Mostrar código QR</button></div>` : '<p>Aún no hay un código generado para esta actividad.</p>'}
                 <p class="form-message" id="attendanceControlMessage" role="status" aria-live="polite"></p>
@@ -1344,21 +1623,38 @@
                 const confirmed = getCollection("asistencias").some(row => row.usuario_id === enrollment.usuario_id && row.voluntariado_id === id && row.confirmada);
                 return `<div class="participant-row"><span>${escapeHtml(participant?.nombre || "Usuario")} · ${escapeHtml(participant?.correo || "")}</span><span>${statusBadge(confirmed ? "completada" : "pendiente")}</span>${enrollment.estado === "activa" ? `<button type="button" class="attendance-button" data-attendance-user="${escapeHtml(enrollment.usuario_id)}" ${confirmed ? "disabled" : ""}>${confirmed ? "Asistencia confirmada" : "Registrar asistencia"}</button>` : ""}</div>`;
             }).join("") || "<p>Aún no hay inscripciones.</p>"}</section>` : "";
+        const volunteerManagement = isVolunteer && (admin || isOwner) && !["cancelado", "finalizado"].includes(item.estado)
+            ? `<div class="detail-management-actions"><a class="detail-action" href="crear-contenido.html?tipo=voluntariado&id=${encodeURIComponent(id)}">Editar voluntariado</a></div>`
+            : "";
+        const floraManagement = isFlora && admin ? `<div class="detail-management-actions">
+            <a class="detail-action" href="admin.html?tab=flora&editSpecies=${encodeURIComponent(id)}">Editar ficha en administración</a>
+            <button type="button" class="detail-action secondary-button" id="toggleSpeciesState">${item.estado === "inactivo" ? "Reactivar ficha" : "Desactivar ficha"}</button>
+        </div>` : "";
+        const articleManagement = isArticle && (admin || user?.usuario_id === item.autor_id) ? `<div class="detail-management-actions">
+            <a class="detail-action" href="crear-contenido.html?tipo=articulo&id=${encodeURIComponent(id)}">Editar artículo</a>
+            ${!admin ? "" : `
+            <button type="button" class="detail-action" data-article-action="${item.estado === "publicado" || item.estado === "retirado" ? "publicado" : "pendiente"}">${item.estado === "publicado" || item.estado === "retirado" ? "Publicar artículo" : "Devolver a revisión"}</button>
+            ${item.estado === "publicado" ? '<button type="button" class="detail-action secondary-button" data-article-action="retirado">Retirar de publicación</button>' : ""}
+            ${item.estado === "pendiente" ? '<button type="button" class="detail-action secondary-button" data-article-action="rechazado">Rechazar</button>' : ""}
+            <button type="button" class="detail-action danger-button" data-article-action="eliminar">Eliminar artículo</button>`}
+        </div>` : "";
+        const relatedArticles = isArticle ? getPublicArticles().filter(article => article.articulos_id !== id && article.categoria === item.categoria).slice(0, 3) : [];
 
         document.title = `${title} · Regenera BCS`;
         target.innerHTML = `<article class="detail-article">
             <img class="detail-image" src="${escapeHtml(image || "")}" alt="${escapeHtml(title)}">
             <div class="detail-body">
-                <span class="detail-label">${escapeHtml(isVolunteer ? "Voluntariado" : isFlora ? item.tipo : "Artículo")} · ${escapeHtml(item.categoria || item.tipo || "")}</span>
-                <div class="detail-title-line"><h1>${escapeHtml(title)}</h1>${statusBadge(item.estado || item.estadoConservacion)}</div>
+                <span class="detail-label">${escapeHtml(isVolunteer ? "Voluntariado" : isFlora ? item.tipo : "Artículo")} · ${escapeHtml(detailCategory)}</span>
+                <div class="detail-title-line"><h1>${escapeHtml(title)}</h1>${statusBadge(isFlora ? "Dato demo" : item.estado || "")}</div>
                 ${details}
-                ${isFlora && item.nombreCientifico ? `<p class="detail-scientific">${escapeHtml(item.nombreCientifico)}</p>` : ""}
-                <div class="detail-copy">${(isVolunteer ? item.descripcion : item.contenido || item.descripcion).split(/\n+/).filter(Boolean).map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join("")}</div>
+                ${!isFlora ? `<div class="detail-copy">${(isVolunteer ? item.descripcion : item.contenido || item.descripcion).split(/\n+/).filter(Boolean).map(paragraph => `<p>${escapeHtml(paragraph)}</p>`).join("")}</div>` : ""}
+                ${isArticle && item.referencias?.length ? `<section class="article-references"><h2>Fuentes y referencias</h2><ul>${item.referencias.map(reference => `<li>${escapeHtml(reference)}</li>`).join("")}</ul></section>` : ""}
+                ${relatedArticles.length ? `<section class="related-articles"><h2>Artículos relacionados</h2><div>${relatedArticles.map(article => `<a href="${detailUrl("articulo", article.articulos_id)}">${escapeHtml(article.titulo)} →</a>`).join("")}</div></section>` : ""}
                 ${hasAttendance
                     ? '<p class="attendance-confirmed">✓ Asistencia registrada · Voluntariado completado</p>'
                     : isVolunteer && user && mine ? '<p class="impact-reward-note">Al completar esta actividad recibirás <strong>+50 puntos</strong> y podrás avanzar en tus medallas.</p>' : ""}
                 ${author ? `<p class="detail-author">${isVolunteer ? "Organiza" : "Autor"}: ${escapeHtml(author.nombre)}</p>` : ""}
-                ${participates}${userAttendance}${management}
+                ${participates}${userAttendance}${management}${volunteerManagement}${floraManagement}${articleManagement}
                 <a class="section-link" href="${returnPage}">← Volver</a>
             </div>
         </article>`;
@@ -1367,8 +1663,7 @@
         generateCodeButton?.addEventListener("click", () => {
             const message = document.getElementById("attendanceControlMessage");
             try {
-                const expiry = document.getElementById("attendanceExpiry").value;
-                generateAttendanceCode(id, expiry);
+                generateAttendanceCode(id);
                 renderDetailPage();
             } catch (error) {
                 message.textContent = error.message;
@@ -1425,6 +1720,27 @@
                 }
             });
         });
+        document.getElementById("toggleSpeciesState")?.addEventListener("click", () => {
+            const nextState = item.estado === "inactivo" ? "activo" : "inactivo";
+            if (!window.confirm(`${nextState === "inactivo" ? "Desactivar" : "Reactivar"} esta ficha? El registro se conservará.`)) return;
+            updateFlora(id, { estado: nextState });
+            renderDetailPage();
+        });
+        target.querySelectorAll("[data-article-action]").forEach(button => {
+            button.addEventListener("click", () => {
+                const action = button.dataset.articleAction;
+                const actionNames = { publicado: "publicar", pendiente: "devolver a revisión", rechazado: "rechazar", retirado: "retirar de publicación", eliminar: "eliminar" };
+                if (!window.confirm(`¿${actionNames[action]} este artículo?`)) return;
+                if (action === "eliminar") removeContent("articulos", id);
+                else moderateContent("articulos", id, action);
+                renderDetailPage();
+                renderArticleListing();
+            });
+        });
+        target.querySelectorAll(".detail-management-actions button").forEach(button => {
+            button.dataset.tooltip = button.textContent.trim();
+            button.setAttribute("aria-description", button.dataset.tooltip);
+        });
     }
 
     function initializeCreateForm() {
@@ -1432,6 +1748,7 @@
         if (!form) return;
         const params = new URLSearchParams(window.location.search);
         const type = params.get("tipo");
+        const recordId = params.get("id");
         const user = getCurrentUser();
         const message = document.getElementById("createMessage");
         const showError = text => {
@@ -1439,11 +1756,19 @@
             message.className = "form-message is-error";
         };
         if (!user) {
-            window.location.replace(`login.html?returnTo=${encodeURIComponent(`crear-contenido.html?tipo=${type || ""}`)}`);
+            window.location.replace(`login.html?returnTo=${encodeURIComponent(`crear-contenido.html?tipo=${type || ""}${recordId ? `&id=${recordId}` : ""}`)}`);
             return;
         }
         if (!["articulo", "voluntariado"].includes(type)) {
             showError("Elige si quieres crear un artículo o un voluntariado.");
+            form.hidden = true;
+            return;
+        }
+        const record = recordId
+            ? type === "articulo" ? getById("articulos", recordId) : getById("voluntariados", recordId)
+            : null;
+        if (recordId && (!record || user.rol !== "administrador" && (type === "articulo" ? record.autor_id : record.organizador_id) !== user.usuario_id)) {
+            showError("No se encontró el contenido o no tienes permiso para editarlo.");
             form.hidden = true;
             return;
         }
@@ -1453,8 +1778,12 @@
             return;
         }
         const article = type === "articulo";
-        document.getElementById("createTitle").textContent = article ? "Crear artículo" : "Crear voluntariado";
-        document.getElementById("createSubtitle").textContent = article ? "Tu artículo quedará pendiente hasta que el equipo lo revise." : "Tu voluntariado quedará pendiente de aprobación antes de aparecer públicamente.";
+        const publicationField = document.getElementById("adminPublicationField");
+        publicationField.hidden = user.rol !== "administrador";
+        document.getElementById("createTitle").textContent = `${record ? "Editar" : "Crear"} ${article ? "artículo" : "voluntariado"}`;
+        document.getElementById("createSubtitle").textContent = record
+            ? user.rol === "administrador" ? "Guarda los cambios y elige si se publica o continúa en revisión." : "Los cambios de contenido publicado se enviarán nuevamente a revisión."
+            : article ? "Tu artículo quedará pendiente hasta que el equipo lo revise." : "Tu voluntariado quedará pendiente de aprobación antes de aparecer públicamente.";
         document.querySelectorAll("[data-field-group]").forEach(group => {
             group.hidden = group.dataset.fieldGroup !== type;
             group.querySelectorAll("input, textarea, select").forEach(input => input.required = !group.hidden && input.name !== "requirements" && input.name !== "materials");
@@ -1467,6 +1796,28 @@
             const placeSelect = document.getElementById("placeId");
             placeSelect.innerHTML = '<option value="">Selecciona un lugar</option>' + getCollection("lugares").filter(place => place.estado === "activo").map(place => `<option value="${escapeHtml(place.lugares_id)}">${escapeHtml(place.nombre)} — ${escapeHtml(place.ubicacion.direccion)}</option>`).join("");
         }
+        if (record) {
+            form.elements.title.value = record.titulo || "";
+            form.elements.category.value = record.categoria || "";
+            form.elements.image.value = record.imagen || "";
+            if (article) {
+                form.elements.content.value = record.contenido || "";
+            } else {
+                const [summary, ...content] = String(record.descripcion || "").split(/\n\n/);
+                form.elements.summary.value = summary || "";
+                form.elements.content.value = content.join("\n\n");
+                form.elements.date.value = record.fecha || "";
+                form.elements.hourStart.value = record.horarioInicio || "";
+                form.elements.hourEnd.value = record.horarioFin || "";
+                form.elements.lugar_id.value = record.lugar_id || "";
+                form.elements.location.value = record.ubicacion || "";
+                form.elements.capacity.value = record.capacidad || "";
+                form.elements.requirements.value = record.requisitos || "";
+                form.elements.materials.value = record.materiales || "";
+            }
+            if (user.rol === "administrador") form.elements.estadoInicial.value = record.estado === "publicado" ? "publicado" : "pendiente";
+        }
+        form.querySelector('[type="submit"]').textContent = record ? "Guardar cambios" : "Enviar a revisión";
         form.addEventListener("submit", event => {
             event.preventDefault();
             if (!form.reportValidity()) return;
@@ -1475,18 +1826,20 @@
                 const image = String(values.get("image") || "");
                 if (image && !/^https?:\/\//i.test(image)) throw new Error("La imagen debe ser una URL http o https.");
                 if (article) {
-                    const record = createArticle({
+                    const input = {
                         titulo: values.get("title"),
                         categoria: values.get("category"),
                         contenido: values.get("content"),
-                        imagen: image
-                    });
-                    window.location.href = `${detailUrl("articulo", record.articulos_id)}&creado=1`;
+                        imagen: image,
+                        estadoInicial: values.get("estadoInicial")
+                    };
+                    const saved = record ? updateArticle(recordId, input) : createArticle(input);
+                    window.location.href = `${detailUrl("articulo", saved.articulos_id)}&${record ? "editado" : "creado"}=1`;
                     return;
                 }
                 const placeId = String(values.get("lugar_id"));
                 const place = getById("lugares", placeId);
-                const record = createVolunteer({
+                const input = {
                     titulo: values.get("title"),
                     categoria: values.get("category"),
                     descripcion: `${String(values.get("summary")).trim()}\n\n${String(values.get("content")).trim()}`,
@@ -1498,9 +1851,11 @@
                     ubicacion: values.get("location") || place?.ubicacion?.direccion,
                     capacidad: Number(values.get("capacity")),
                     requisitos: values.get("requirements"),
-                    materiales: values.get("materials")
-                });
-                window.location.href = `${detailUrl("voluntariado", record.voluntariados_id)}&creado=1`;
+                    materiales: values.get("materials"),
+                    estadoInicial: values.get("estadoInicial")
+                };
+                const saved = record ? updateVolunteer(recordId, input) : createVolunteer(input);
+                window.location.href = `${detailUrl("voluntariado", saved.voluntariados_id)}&${record ? "editado" : "creado"}=1`;
             } catch (error) {
                 showError(error.message);
             }
@@ -1537,8 +1892,11 @@
         requireUser,
         createArticle,
         createVolunteer,
+        updateArticle,
+        updateVolunteer,
         moderateContent,
         updateUser,
+        requestOrganizerVerification,
         removeContent,
         updatePlace,
         createPlace,
@@ -1572,6 +1930,7 @@
         escapeHtml,
         formatDate,
         formatTime,
+        formatVolunteerDuration,
         statusBadge,
         getUnreadNotifications,
         renderNavigation
